@@ -1,3 +1,5 @@
+import { MessagePort } from 'worker_threads';
+
 export const enum FnExecType {
   transfer = 'transfer',
   load = 'load',

@@ -1,22 +1,21 @@
 {
-  "compilerOptions": {
-      "module": "commonjs",
-      "esModuleInterop": true,
-      "allowSyntheticDefaultImports": true,
-      "target": "es6",
-      "noImplicitAny": true,
+    "compilerOptions": {
+      "target": "esnext",
+      "module": "esnext",
       "moduleResolution": "node",
-      "sourceMap": true,
+      "noImplicitAny": false,
+      "removeComments": false,
+      "preserveConstEnums": true,
+      "sourceMap": false,
+      "forceConsistentCasingInFileNames": true,
       "outDir": "dist",
-      "baseUrl": ".",
-      "paths": {
-          "*": [
-              "node_modules/*",
-              "src/types/*"
-          ]
-      }
-  },
-  "include": [
-      "src/**/*"
-  ]
-}
+      "declaration": true
+    },
+    "include": [
+      "src/**/*.ts"
+    ],
+    "exclude": [
+      "src/**/*.spec.ts",
+      "node_modules"
+    ]
+  }
