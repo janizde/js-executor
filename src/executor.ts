@@ -46,7 +46,6 @@ function* roundRobinSelector(workers: Array<Worker>) {
 }
 
 class WorkerPoolExecutor {
-  private readonly numWorkers: number;
   private readonly workers: Array<Worker>;
   private readonly workerSelector: Iterator<number>;
 
@@ -58,7 +57,6 @@ class WorkerPoolExecutor {
       workers.push(worker);
     }
 
-    this.numWorkers = numWorkers;
     this.workers = workers;
     this.workerSelector = roundRobinSelector(workers);
   }
@@ -78,8 +76,8 @@ class WorkerPoolExecutor {
     }
   }
 
-  execute<I, O, C>(
-    fnDescriptor: FnDescriptor<I, O, C>,
+  execute<I, O>(
+    fnDescriptor: FnDescriptor<I, O, undefined>,
     data: I,
     transferList?: Array<ArrayBuffer | MessagePort>
   ) {
@@ -117,8 +115,8 @@ class WorkerPoolExecutor {
     });
   }
 
-  map<I, O, C>(
-    fnDescriptor: FnDescriptor<I, O, C>,
+  map<I, O>(
+    fnDescriptor: FnDescriptor<I, O, undefined>,
     elements: Array<I>,
     transferList: Array<ArrayBuffer | MessagePort>
   ) {
@@ -171,6 +169,12 @@ class WorkerPoolExecutor {
       return Promise.all<O>(deferred.map(p => p.promise)).then(resolve, reject);
     });
   }
+}
+
+interface Context<C> {
+  id: number;
+  value: C;
+  transferList?: Array<Transferable>;
 }
 
 const exec = new WorkerPoolExecutor(2);
