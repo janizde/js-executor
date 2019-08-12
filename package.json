@@ -11,5 +11,10 @@
     "url": "git@gitlab.beuth-hochschule.de:scheduling-threading-javascript/executor.git"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^12.7.1",
+    "prettier": "^1.18.2",
+    "typescript": "^3.5.3"
+  }
 }
