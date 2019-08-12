@@ -35,6 +35,7 @@ export const enum CommandKind {
   sendContext = 'sendContext',
   execute = 'execute',
   map = 'map',
+  mapElement = 'mapElement',
   result = 'result',
   error = 'error',
 }
@@ -51,8 +52,13 @@ export interface CommandMap {
   cmd: CommandKind.map;
   port: MessagePort;
   fn: FnWorkerDescriptor;
-  elements: Array<any>;
   contextId?: number;
+}
+
+export interface CommandMapElement {
+  cmd: CommandKind.mapElement;
+  element: any
+  index: number;
 }
 
 export interface CommandImportFunction {
@@ -80,4 +86,4 @@ export interface CommandError {
   index?: number;
 }
 
-export type Command = CommandImportFunction | CommandSendContext | CommandExecute | CommandMap | CommandResult | CommandError;
+export type Command = CommandImportFunction | CommandSendContext | CommandExecute | CommandMap | CommandMapElement | CommandResult | CommandError;

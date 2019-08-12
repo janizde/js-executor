@@ -12,7 +12,7 @@ import {
 
 (() => {
   const contexts: Record<number, any> = {};
-  
+
   parentPort.on("message", (message: Command) => {
     switch (message.cmd) {
       case CommandKind.execute:
@@ -29,7 +29,10 @@ import {
   function spawnExecution(command: CommandExecute | CommandMap) {
     const port = command.port;
     const taskFunction = getFunctionFromDescriptor(command.fn);
-    const contextValue = typeof command.contextId === 'number' ? contexts[command.contextId] : undefined;
+    const contextValue =
+      typeof command.contextId === "number"
+        ? contexts[command.contextId]
+        : undefined;
 
     switch (command.cmd) {
       case CommandKind.execute:
@@ -53,8 +56,14 @@ import {
           });
         break;
 
-      case CommandKind.map:
-        command.elements.forEach((element, index) => {
+      case CommandKind.map: {
+        port.on("message", (message: Command) => {
+          if (message.cmd !== CommandKind.mapElement) {
+            return;
+          }
+
+          const { element, index } = message;
+
           Promise.resolve()
             .then(() => taskFunction(element, contextValue))
             .then(result => {
@@ -66,16 +75,17 @@ import {
 
               port.postMessage(resultCmd);
             })
-            .catch(error => {
+            .catch(err => {
               const errorCmd: CommandError = {
                 cmd: CommandKind.error,
-                message: error.message,
+                message: err.message,
                 index
               };
 
               port.postMessage(errorCmd);
             });
         });
+      }
     }
   }
 
@@ -84,7 +94,11 @@ import {
   ): Function {
     switch (fnDescriptor.$$exec_type) {
       case "transfer":
-        return new Function("data", "context", `return (${fnDescriptor.fn})(data, context);`);
+        return new Function(
+          "data",
+          "context",
+          `return (${fnDescriptor.fn})(data, context);`
+        );
 
       default:
         return (data: any) => data;

@@ -14,7 +14,8 @@ import {
   Command,
   CommandMap,
   CommandExecute,
-  CommandSendContext
+  CommandSendContext,
+  CommandMapElement
 } from "./common";
 
 type TransferList = Array<ArrayBuffer | MessagePort>;
@@ -47,6 +48,11 @@ function* roundRobinSelector(workers: Array<Worker>) {
   for (let i = 0; true; ++i) {
     yield i % workers.length;
   }
+}
+
+interface WorkerSession {
+  execPort: MessagePort;
+  workerPort: MessagePort;
 }
 
 class WorkerPoolExecutor {
@@ -85,7 +91,7 @@ class WorkerPoolExecutor {
         return descriptor;
     }
   }
-  
+
   private __maybeSendContext(context: Context<any>, workerId: number) {
     if (this.contextRegister[workerId].indexOf(context.id) > -1) {
       return;
@@ -94,18 +100,21 @@ class WorkerPoolExecutor {
     const contextCmd: CommandSendContext = {
       cmd: CommandKind.sendContext,
       id: context.id,
-      value: context.value,
+      value: context.value
     };
 
     const worker = this.workers[workerId];
     worker.postMessage(contextCmd, context.transferList);
   }
-  
-  private createContext<C>(value: C, transferList?: TransferList): Context<C> {
+
+  private __createContext<C>(
+    value: C,
+    transferList?: TransferList
+  ): Context<C> {
     return {
       id: ++this.contextCounter,
       value,
-      transferList,
+      transferList
     };
   }
 
@@ -113,12 +122,7 @@ class WorkerPoolExecutor {
     value: C,
     transferList?: TransferList
   ): ContextifiedProxy<C> {
-    const context: Context<C> = {
-      id: 0,
-      value,
-      transferList
-    };
-
+    const context = this.__createContext(value, transferList);
     return new ContextifiedProxy(this, context);
   }
 
@@ -193,12 +197,8 @@ class WorkerPoolExecutor {
     transferList: TransferList | undefined,
     context: Context<C> | undefined
   ) {
-    const workerIndex = this.workerSelector.next().value;
-    const worker = this.workers[workerIndex];
-    const { port1: execPort, port2: workerPort } = new MessageChannel();
-    const combinedTransferList: TransferList = transferList
-      ? transferList.concat(workerPort)
-      : [workerPort];
+    const workerSessions = new Array<WorkerSession>(this.workers.length);
+    const fnDescriptorWorker = this.prepareDescriptor(fnDescriptor);
 
     const deferred = elements.map(() => {
       let resolve: (value: O | PromiseLike<O>) => void = null;
@@ -212,40 +212,65 @@ class WorkerPoolExecutor {
       return { resolve, reject, promise };
     });
 
-    return new Promise<Array<O>>((resolve, reject) => {
-      execPort.on("error", err => reject(err));
-      execPort.on("message", (message: CommandResult | CommandError) => {
-        if (typeof message.index !== "number") {
-          return;
-        }
+    const getWorkerSession = (workerId: number): WorkerSession => {
+      if (workerSessions[workerId]) {
+        return workerSessions[workerId];
+      }
 
-        switch (message.cmd) {
-          case CommandKind.result:
-            deferred[message.index].resolve(message.value);
-            return;
+      const channel = new MessageChannel();
+      const session: WorkerSession = {
+        execPort: channel.port1,
+        workerPort: channel.port2
+      };
 
-          case CommandKind.error:
-            deferred[message.index].reject(new Error(message.message));
-            return;
+      workerSessions[workerId] = session;
+
+      session.execPort.on(
+        "message",
+        (message: CommandResult | CommandError) => {
+          switch (message.cmd) {
+            case CommandKind.result:
+              deferred[message.index].resolve(message.value);
+              return;
+
+            case CommandKind.error:
+              deferred[message.index].reject(new Error(message.message));
+              return;
+          }
         }
-      });
+      );
 
       const mapCommand: CommandMap = {
         cmd: CommandKind.map,
-        port: workerPort,
-        elements,
-        fn: this.prepareDescriptor(fnDescriptor)
+        fn: fnDescriptorWorker,
+        port: session.workerPort
       };
 
       if (context) {
-        this.__maybeSendContext(context, workerIndex);
+        this.__maybeSendContext(context, workerId);
         mapCommand.contextId = context.id;
       }
 
-      worker.postMessage(mapCommand, combinedTransferList);
+      const worker = this.workers[workerId];
+      worker.postMessage(mapCommand, [session.workerPort]);
+      return session;
+    }
 
-      return Promise.all<O>(deferred.map(p => p.promise)).then(resolve, reject);
+    elements.forEach((element, index) => {
+      const workerId = this.workerSelector.next().value;
+      const session = getWorkerSession(workerId);
+      console.log(workerId);
+
+      const mapElementCommand: CommandMapElement = {
+        cmd: CommandKind.mapElement,
+        element,
+        index
+      };
+
+      session.execPort.postMessage(mapElementCommand, transferList);
     });
+
+    return Promise.all(deferred.map(d => d.promise));
   }
 }
 
@@ -295,7 +320,7 @@ class ContextifiedProxy<C> {
   }
 }
 
-const exec = new WorkerPoolExecutor(2);
+const exec = new WorkerPoolExecutor(5);
 async function myFunc(data: Record<string, number>) {
   return new Promise<Record<string, number>>(resolve => {
     setTimeout(() => {
@@ -323,8 +348,15 @@ function testExec() {
 
 function testMap() {
   const ctx = {
-    factor: 10000,
+    factor: 10000
   };
+
+  const randomValues: Array<Record<string, number>> = [];
+  for (let i = 0; i < 100; ++i) {
+    randomValues.push({
+      foo: Math.random() * 100
+    });
+  }
 
   exec
     .provideContext(ctx)
@@ -341,7 +373,7 @@ function testMap() {
 
         return multiplied;
       }),
-      [{ foo: 2 }, { bar: 3 }]
+      randomValues
     )
     .then(results => console.log(results))
     .then(() => process.exit(0));
