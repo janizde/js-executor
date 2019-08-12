@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/executor.ts",
+    "start": "node dist/executor.js",
+    "start:watch": "nodemon dist/executor.js",
     "build": "npm run clean && tsc",
+    "build:watch": "npm run clean && tsc --watch",
     "clean": "rm -rf dist || exit 0",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -13,10 +15,11 @@
     "type": "git",
     "url": "git@gitlab.beuth-hochschule.de:scheduling-threading-javascript/executor.git"
   },
-  "author": "",
+  "author": "Jannik Portz",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^12.7.1",
+    "nodemon": "^1.19.1",
     "prettier": "^1.18.2",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3"

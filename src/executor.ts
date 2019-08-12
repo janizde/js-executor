@@ -12,8 +12,12 @@ import {
   CommandError,
   CommandKind,
   Command,
-  CommandMap
+  CommandMap,
+  CommandExecute,
+  CommandSendContext
 } from "./common";
+
+type TransferList = Array<ArrayBuffer | MessagePort>;
 
 function transferFn<I, O, C>(
   fn: (data: I, context: C) => O
@@ -48,17 +52,23 @@ function* roundRobinSelector(workers: Array<Worker>) {
 class WorkerPoolExecutor {
   private readonly workers: Array<Worker>;
   private readonly workerSelector: Iterator<number>;
+  private readonly contextRegister: Array<Array<number>>;
+  private contextCounter: number;
 
   constructor(numWorkers: number) {
-    const workers = [];
+    const workers: Array<Worker> = [];
+    const contextRegister: Array<Array<number>> = [];
 
     for (let i = 0; i < numWorkers; ++i) {
       const worker = new Worker(join(__dirname, "bridge.js"));
       workers.push(worker);
+      contextRegister.push([]);
     }
 
     this.workers = workers;
+    this.contextRegister = contextRegister;
     this.workerSelector = roundRobinSelector(workers);
+    this.contextCounter = 0;
   }
 
   private prepareDescriptor(
@@ -75,16 +85,66 @@ class WorkerPoolExecutor {
         return descriptor;
     }
   }
+  
+  private __maybeSendContext(context: Context<any>, workerId: number) {
+    if (this.contextRegister[workerId].indexOf(context.id) > -1) {
+      return;
+    }
 
-  execute<I, O>(
+    const contextCmd: CommandSendContext = {
+      cmd: CommandKind.sendContext,
+      id: context.id,
+      value: context.value,
+    };
+
+    const worker = this.workers[workerId];
+    worker.postMessage(contextCmd, context.transferList);
+  }
+  
+  private createContext<C>(value: C, transferList?: TransferList): Context<C> {
+    return {
+      id: ++this.contextCounter,
+      value,
+      transferList,
+    };
+  }
+
+  public provideContext<C>(
+    value: C,
+    transferList?: TransferList
+  ): ContextifiedProxy<C> {
+    const context: Context<C> = {
+      id: 0,
+      value,
+      transferList
+    };
+
+    return new ContextifiedProxy(this, context);
+  }
+
+  public execute<I, O>(
     fnDescriptor: FnDescriptor<I, O, undefined>,
     data: I,
-    transferList?: Array<ArrayBuffer | MessagePort>
+    transferList?: TransferList
+  ) {
+    return this.__execute<I, O, undefined>(
+      fnDescriptor,
+      data,
+      transferList,
+      undefined
+    );
+  }
+
+  __execute<I, O, C>(
+    fnDescriptor: FnDescriptor<I, O, C>,
+    data: I,
+    transferList: TransferList | undefined,
+    context: Context<C> | undefined
   ) {
     const workerIndex = this.workerSelector.next().value;
     const worker = this.workers[workerIndex];
     const { port1: execPort, port2: workerPort } = new MessageChannel();
-    const combinedTransferList: Array<ArrayBuffer | MessagePort> = transferList
+    const combinedTransferList: TransferList = transferList
       ? transferList.concat(workerPort)
       : [workerPort];
 
@@ -103,31 +163,44 @@ class WorkerPoolExecutor {
         }
       });
 
-      worker.postMessage(
-        {
-          cmd: "execute",
-          port: workerPort,
-          fn: this.prepareDescriptor(fnDescriptor),
-          data
-        },
-        combinedTransferList
-      );
+      const execCommand: CommandExecute = {
+        cmd: CommandKind.execute,
+        port: workerPort,
+        fn: this.prepareDescriptor(fnDescriptor),
+        data
+      };
+
+      if (context) {
+        this.__maybeSendContext(context, workerIndex);
+        execCommand.contextId = context.id;
+      }
+
+      worker.postMessage(execCommand, combinedTransferList);
     });
   }
 
-  map<I, O>(
+  public map<I, O>(
     fnDescriptor: FnDescriptor<I, O, undefined>,
     elements: Array<I>,
-    transferList: Array<ArrayBuffer | MessagePort>
+    transferList?: TransferList
+  ) {
+    return this.__map(fnDescriptor, elements, transferList, undefined);
+  }
+
+  __map<I, O, C>(
+    fnDescriptor: FnDescriptor<I, O, C>,
+    elements: Array<I>,
+    transferList: TransferList | undefined,
+    context: Context<C> | undefined
   ) {
     const workerIndex = this.workerSelector.next().value;
     const worker = this.workers[workerIndex];
     const { port1: execPort, port2: workerPort } = new MessageChannel();
-    const combinedTransferList: Array<ArrayBuffer | MessagePort> = transferList
+    const combinedTransferList: TransferList = transferList
       ? transferList.concat(workerPort)
       : [workerPort];
 
-    const deferred = elements.map(element => {
+    const deferred = elements.map(() => {
       let resolve: (value: O | PromiseLike<O>) => void = null;
       let reject: (error: Error) => void = null;
 
@@ -164,6 +237,11 @@ class WorkerPoolExecutor {
         fn: this.prepareDescriptor(fnDescriptor)
       };
 
+      if (context) {
+        this.__maybeSendContext(context, workerIndex);
+        mapCommand.contextId = context.id;
+      }
+
       worker.postMessage(mapCommand, combinedTransferList);
 
       return Promise.all<O>(deferred.map(p => p.promise)).then(resolve, reject);
@@ -174,7 +252,47 @@ class WorkerPoolExecutor {
 interface Context<C> {
   id: number;
   value: C;
-  transferList?: Array<Transferable>;
+  transferList?: TransferList;
+}
+
+class ContextifiedProxy<C> {
+  private readonly executor: WorkerPoolExecutor;
+  private readonly context: Context<C>;
+
+  constructor(executor: WorkerPoolExecutor, context: Context<C>) {
+    this.executor = executor;
+    this.context = context;
+  }
+
+  public execute<I, O>(
+    fnDescriptor: FnDescriptor<I, O, C>,
+    data: I,
+    transferList?: TransferList
+  ) {
+    return this.executor.__execute<I, O, C>(
+      fnDescriptor,
+      data,
+      transferList,
+      this.context
+    );
+  }
+
+  public map<I, O>(
+    fnDescriptor: FnDescriptor<I, O, C>,
+    elements: Array<I>,
+    transferList?: TransferList
+  ) {
+    return this.executor.__map<I, O, C>(
+      fnDescriptor,
+      elements,
+      transferList,
+      this.context
+    );
+  }
+
+  public provideContext<C2>(value: C2, transferList?: TransferList) {
+    return this.executor.provideContext<C2>(value, transferList);
+  }
 }
 
 const exec = new WorkerPoolExecutor(2);
@@ -194,7 +312,39 @@ async function myFunc(data: Record<string, number>) {
   });
 }
 
-Promise.all([
-  exec.execute(transferFn(myFunc), { foo: 2 }),
-  exec.execute(transferFn(myFunc), { bar: 3 })
-]).then(results => console.log(results));
+function testExec() {
+  Promise.all([
+    exec.execute(transferFn(myFunc), { foo: 2 }),
+    exec.execute(transferFn(myFunc), { bar: 3 })
+  ])
+    .then(results => console.log(results))
+    .then(() => process.exit(0));
+}
+
+function testMap() {
+  const ctx = {
+    factor: 10000,
+  };
+
+  exec
+    .provideContext(ctx)
+    .map(
+      transferFn(async function(data: Record<string, number>, context) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const multiplied = Object.keys(data).reduce(
+          (accum, key) => ({
+            ...accum,
+            [key]: data[key] * context.factor
+          }),
+          {} as Record<string, number>
+        );
+
+        return multiplied;
+      }),
+      [{ foo: 2 }, { bar: 3 }]
+    )
+    .then(results => console.log(results))
+    .then(() => process.exit(0));
+}
+
+testMap();
