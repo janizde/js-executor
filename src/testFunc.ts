@@ -1,0 +1,1 @@
+const registerTaskFunction = (self as any).registerTaskFunction as Function;

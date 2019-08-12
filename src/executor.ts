@@ -259,7 +259,6 @@ class WorkerPoolExecutor {
     elements.forEach((element, index) => {
       const workerId = this.workerSelector.next().value;
       const session = getWorkerSession(workerId);
-      console.log(workerId);
 
       const mapElementCommand: CommandMapElement = {
         cmd: CommandKind.mapElement,
@@ -352,7 +351,7 @@ function testMap() {
   };
 
   const randomValues: Array<Record<string, number>> = [];
-  for (let i = 0; i < 100; ++i) {
+  for (let i = 0; i < 10000; ++i) {
     randomValues.push({
       foo: Math.random() * 100
     });

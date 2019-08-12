@@ -64,7 +64,7 @@ export interface CommandMapElement {
 export interface CommandImportFunction {
   cmd: CommandKind.importFunction;
   path: string;
-  name?: string;
+  defaultName?: string;
 }
 
 export interface CommandSendContext {

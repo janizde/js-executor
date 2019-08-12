@@ -7,11 +7,17 @@ import {
   CommandExecute,
   CommandMap,
   CommandResult,
-  CommandError
+  CommandError,
+  CommandImportFunction,
+  FnExecType
 } from "./common";
 
 (() => {
   const contexts: Record<number, any> = {};
+  const globalFunc = Symbol('globalFunc');
+  const functionsRegister: Record<symbol, Record<string, Function>> = {
+    [globalFunc]: {},
+  };
 
   parentPort.on("message", (message: Command) => {
     switch (message.cmd) {
@@ -23,8 +29,25 @@ import {
       case CommandKind.sendContext:
         contexts[message.id] = message.value;
         return;
+        
+      case CommandKind.importFunction:
+        importGlobalFunctions(message);
     }
   });
+
+  function importGlobalFunctions(command: CommandImportFunction) {
+    function registerFunction(name: string, fn: Function): void;
+    function registerFunction(fn: Function): void;
+    function registerFunction(fnOrName: Function | string, fn?: Function) {
+      const name = typeof fnOrName === 'function' ? command.defaultName || 'default' : fnOrName;
+      const theFunction = typeof fnOrName === 'function' ? fnOrName : fn;
+      functionsRegister[globalFunc][name] = theFunction;
+    }
+
+    (self as any).registerTaskFunction = registerFunction;
+    require(command.path);
+    delete (self as any).registerTaskFunction;
+  }
 
   function spawnExecution(command: CommandExecute | CommandMap) {
     const port = command.port;
@@ -93,12 +116,22 @@ import {
     fnDescriptor: FnWorkerDescriptor
   ): Function {
     switch (fnDescriptor.$$exec_type) {
-      case "transfer":
+      case FnExecType.transfer:
         return new Function(
           "data",
           "context",
           `return (${fnDescriptor.fn})(data, context);`
         );
+        
+      case FnExecType.ref: {
+        const fn = functionsRegister[globalFunc][fnDescriptor.name];
+        
+        if (!fn) {
+          throw new Error(`Global function ${fnDescriptor.name} has not been registered as a global task function.`);
+        }
+        
+        return fn;
+      };
 
       default:
         return (data: any) => data;
