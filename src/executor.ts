@@ -15,7 +15,8 @@ import {
   CommandMap,
   CommandExecute,
   CommandSendContext,
-  CommandMapElement
+  CommandMapElement,
+  CommandImportFunction
 } from "./common";
 
 type TransferList = Array<ArrayBuffer | MessagePort>;
@@ -116,6 +117,17 @@ class WorkerPoolExecutor {
       value,
       transferList
     };
+  }
+
+  public importFunction(path: string, defaultName?: string) {
+    const command: CommandImportFunction = {
+      cmd: CommandKind.importFunction,
+      path,
+      defaultName,
+    };
+
+    this.workers.forEach(worker => worker.postMessage(command));
+    return this;
   }
 
   public provideContext<C>(
@@ -349,33 +361,32 @@ function testMap() {
   const ctx = {
     factor: 10000
   };
-
-  const randomValues: Array<Record<string, number>> = [];
-  for (let i = 0; i < 10000; ++i) {
+  
+  interface ImageDescriptor {
+    id: number;
+    width: number;
+    height?: number;
+  }
+  
+  const randomValues: Array<ImageDescriptor> = [];
+  for (let i = 0; i < 1000; ++i) {
     randomValues.push({
-      foo: Math.random() * 100
+      id: i,
+      width: Math.floor(Math.random() * 500),
+      height: Math.random() < 0.5 ? Math.floor(Math.random() * 500) : undefined,
     });
   }
 
   exec
+    .importFunction(join(__dirname, 'testFunc.js'))
     .provideContext(ctx)
     .map(
-      transferFn(async function(data: Record<string, number>, context) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const multiplied = Object.keys(data).reduce(
-          (accum, key) => ({
-            ...accum,
-            [key]: data[key] * context.factor
-          }),
-          {} as Record<string, number>
-        );
-
-        return multiplied;
-      }),
+      refFn("fetchImage"),
       randomValues
     )
-    .then(results => console.log(results))
-    .then(() => process.exit(0));
+    .then(results => console.log(results.map(r => r)))
+    .finally(() => process.exit(0));
+
 }
 
 testMap();

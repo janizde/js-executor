@@ -44,9 +44,9 @@ import {
       functionsRegister[globalFunc][name] = theFunction;
     }
 
-    (self as any).registerTaskFunction = registerFunction;
+    (global as any).registerTaskFunction = registerFunction;
     require(command.path);
-    delete (self as any).registerTaskFunction;
+    delete (global as any).registerTaskFunction;
   }
 
   function spawnExecution(command: CommandExecute | CommandMap) {
