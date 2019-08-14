@@ -8,6 +8,7 @@
     "start:watch": "nodemon dist/executor.js",
     "build": "npm run clean && tsc",
     "build:watch": "npm run clean && tsc --watch",
+    "prettify": "prettier --write src/**/*.ts",
     "clean": "rm -rf dist || exit 0",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

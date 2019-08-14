@@ -14,9 +14,9 @@ import {
 
 (() => {
   const contexts: Record<number, any> = {};
-  const globalFunc = Symbol('globalFunc');
+  const globalFunc = Symbol("globalFunc");
   const functionsRegister: Record<symbol, Record<string, Function>> = {
-    [globalFunc]: {},
+    [globalFunc]: {}
   };
 
   parentPort.on("message", (message: Command) => {
@@ -29,7 +29,7 @@ import {
       case CommandKind.sendContext:
         contexts[message.id] = message.value;
         return;
-        
+
       case CommandKind.importFunction:
         importGlobalFunctions(message);
     }
@@ -39,14 +39,37 @@ import {
     function registerFunction(name: string, fn: Function): void;
     function registerFunction(fn: Function): void;
     function registerFunction(fnOrName: Function | string, fn?: Function) {
-      const name = typeof fnOrName === 'function' ? command.defaultName || 'default' : fnOrName;
-      const theFunction = typeof fnOrName === 'function' ? fnOrName : fn;
+      const name =
+        typeof fnOrName === "function"
+          ? command.defaultName || "default"
+          : fnOrName;
+      const theFunction = typeof fnOrName === "function" ? fnOrName : fn;
       functionsRegister[globalFunc][name] = theFunction;
     }
 
     (global as any).registerTaskFunction = registerFunction;
     require(command.path);
     delete (global as any).registerTaskFunction;
+  }
+
+  function importSingleUseFunction(path: string, name?: string) {
+    let importedFunction: Function | null = null;
+
+    function registerFunction(name: string, fn: Function): void;
+    function registerFunction(fn: Function): void;
+    function registerFunction(fnOrName: Function | string, fn?: Function) {
+      if (!name && typeof fnOrName === "function") {
+        importedFunction = fnOrName;
+      } else if (typeof fnOrName === "string" && name === fnOrName) {
+        importedFunction = fn;
+      }
+    }
+
+    (global as any).registerTaskFunction = registerFunction;
+    require(path);
+    delete (global as any).registerFunction;
+
+    return importedFunction;
   }
 
   function spawnExecution(command: CommandExecute | CommandMap) {
@@ -122,16 +145,33 @@ import {
           "context",
           `return (${fnDescriptor.fn})(data, context);`
         );
-        
+
       case FnExecType.ref: {
         const fn = functionsRegister[globalFunc][fnDescriptor.name];
-        
+
         if (!fn) {
-          throw new Error(`Global function ${fnDescriptor.name} has not been registered as a global task function.`);
+          throw new Error(
+            `Global function ${fnDescriptor.name} has not been registered as a global task function.`
+          );
         }
-        
+
         return fn;
-      };
+      }
+
+      case FnExecType.load: {
+        const fn = importSingleUseFunction(
+          fnDescriptor.path,
+          fnDescriptor.name
+        );
+
+        if (!fn) {
+          throw new Error(
+            `Single use function for path ${fnDescriptor.path} and name ${fnDescriptor.name} could not be found.`
+          );
+        }
+
+        return fn;
+      }
 
       default:
         return (data: any) => data;

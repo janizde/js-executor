@@ -1,13 +1,13 @@
-import { MessagePort } from 'worker_threads';
+import { MessagePort } from "worker_threads";
 
 export const enum FnExecType {
-  transfer = 'transfer',
-  load = 'load',
-  ref = 'ref',
+  transfer = "transfer",
+  load = "load",
+  ref = "ref"
 }
 
 export interface FnDescriptorTransfer<I, O, C> {
-  $$exec_type: FnExecType.transfer,
+  $$exec_type: FnExecType.transfer;
   fn: (data: I, context: C) => O;
 }
 
@@ -23,21 +23,27 @@ export interface FnDescriptorLoad {
 }
 
 export interface FnDescriptorRef {
-  $$exec_type: FnExecType.ref,
+  $$exec_type: FnExecType.ref;
   name: string;
 }
 
-export type FnDescriptor<I, O, C> = FnDescriptorTransfer<I, O, C> | FnDescriptorLoad | FnDescriptorRef;
-export type FnWorkerDescriptor = FnDescriptorTransferSerialized | FnDescriptorLoad | FnDescriptorRef;
+export type FnDescriptor<I, O, C> =
+  | FnDescriptorTransfer<I, O, C>
+  | FnDescriptorLoad
+  | FnDescriptorRef;
+export type FnWorkerDescriptor =
+  | FnDescriptorTransferSerialized
+  | FnDescriptorLoad
+  | FnDescriptorRef;
 
 export const enum CommandKind {
-  importFunction = 'importFunction',
-  sendContext = 'sendContext',
-  execute = 'execute',
-  map = 'map',
-  mapElement = 'mapElement',
-  result = 'result',
-  error = 'error',
+  importFunction = "importFunction",
+  sendContext = "sendContext",
+  execute = "execute",
+  map = "map",
+  mapElement = "mapElement",
+  result = "result",
+  error = "error"
 }
 
 export interface CommandExecute {
@@ -57,7 +63,7 @@ export interface CommandMap {
 
 export interface CommandMapElement {
   cmd: CommandKind.mapElement;
-  element: any
+  element: any;
   index: number;
 }
 
@@ -79,11 +85,25 @@ export interface CommandResult {
   index?: number;
 }
 
-
 export interface CommandError {
   cmd: CommandKind.error;
   message: string;
   index?: number;
 }
 
-export type Command = CommandImportFunction | CommandSendContext | CommandExecute | CommandMap | CommandMapElement | CommandResult | CommandError;
+export type Command =
+  | CommandImportFunction
+  | CommandSendContext
+  | CommandExecute
+  | CommandMap
+  | CommandMapElement
+  | CommandResult
+  | CommandError;
+
+export type TransferList = Array<ArrayBuffer | MessagePort>;
+
+export interface Context<C> {
+  id: number;
+  value: C;
+  transferList?: TransferList;
+}
