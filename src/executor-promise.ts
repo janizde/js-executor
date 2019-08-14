@@ -37,6 +37,8 @@ class ExecutorPromise<E, A> {
   private catchCallback?: CatchCallback;
   private elementCallback?: ElementCallback<E>;
   private errorCallback?: ErrorCallback;
+  private successRegister: Array<{ value: E; index: number }>;
+  private errorRegister: Array<{ reason: Error; index: number }>;
 
   constructor(
     executor: (manager: PromiseManager<E, A>) => void,
@@ -45,6 +47,8 @@ class ExecutorPromise<E, A> {
     this.onAbort = onAbort;
     this.allPromise = createPromiseRecord<A>();
     this.elementPromises = [];
+    this.successRegister = [];
+    this.errorRegister = [];
 
     const resolveAll = (value: A) => this.allPromise.resolve(value);
     const rejectAll = (reason: any) => this.allPromise.reject(reason);

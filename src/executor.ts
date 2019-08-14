@@ -1,7 +1,8 @@
 import { join } from "path";
 import * as fs from "fs";
 import WorkerPoolExecutor from "./worker-pool-executor";
-import { transferFn, loadFn } from "./fn";
+import ExecutorPromise from './executor-promise';
+import { loadFn } from "./fn";
 
 const exec = new WorkerPoolExecutor(5);
 async function myFunc(data: Record<string, number>) {
@@ -18,15 +19,6 @@ async function myFunc(data: Record<string, number>) {
       resolve(multiplied);
     }, 1000);
   });
-}
-
-function testExec() {
-  Promise.all([
-    exec.execute(transferFn(myFunc), { foo: 2 }),
-    exec.execute(transferFn(myFunc), { bar: 3 })
-  ])
-    .then(results => console.log(results))
-    .then(() => process.exit(0));
 }
 
 function testMap() {
@@ -63,4 +55,34 @@ function testMap() {
     .finally(() => process.exit(0));
 }
 
-testMap();
+function testExecutorPromise() {
+  const makePromise = (i: number) => new Promise<number>((resolve, reject) => {
+    setTimeout(() => {
+      if (Math.random() > 0.3) {
+        resolve(i * 2 + 1)
+      } else {
+        reject(new Error(`Element ${i} rejected`));
+      }
+    }, i * 200);
+  });
+
+  new ExecutorPromise<number, Array<number>>(({ resolveAll, resolveElement, rejectElement, rejectAll }) => {
+    const promises: Array<Promise<number>> = [];
+    for (let i = 0; i < 10; ++i) {
+      promises.push(makePromise(i));
+    }
+
+    promises.forEach((p, i) => p.then(
+      value => resolveElement(value, i),
+    err => rejectElement(err as any, i),
+      ));
+
+    Promise.all(promises).then(values => resolveAll(values), err => rejectAll(err));
+  }, () => console.log('abort'))
+    .then(values => console.log('resolve all', values))
+    .catch(err => console.log('rejected all', err))
+    .element((value, index) => console.log('resolve element', value, index))
+    .error((err, index) => console.log('reject element', err.message, index));
+}
+
+testExecutorPromise();
