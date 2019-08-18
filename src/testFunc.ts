@@ -1,9 +1,9 @@
-const https = require("https");
-const fs = require("fs");
-const Stream = require("stream").Transform;
-const path = require("path");
+const https = require('https');
+const fs = require('fs');
+const Stream = require('stream').Transform;
+const path = require('path');
 
-import { Transform } from "stream";
+import { Transform } from 'stream';
 
 interface ImageDescriptor {
   id: number;
@@ -13,7 +13,7 @@ interface ImageDescriptor {
 
 async function fetchImage(data: ImageDescriptor) {
   const url = `https://via.placeholder.com/${data.width}${
-    data.height ? `x${data.height}` : ""
+    data.height ? `x${data.height}` : ''
   }`;
 
   try {
@@ -21,18 +21,18 @@ async function fetchImage(data: ImageDescriptor) {
       https
         .get(url, res => {
           const str = new Stream();
-          res.on("data", chunk => {
+          res.on('data', chunk => {
             str.push(chunk);
           });
-          res.on("end", () => resolve(str));
+          res.on('end', () => resolve(str));
         })
-        .on("error", e => reject(e));
+        .on('error', e => reject(e));
     });
 
     return await new Promise((resolve, reject) => {
       const imgData = imageStream.read();
       fs.writeFile(
-        path.join(__dirname, "assets", `${data.id}.png`),
+        path.join(__dirname, 'assets', `${data.id}.png`),
         imgData,
         err => {
           if (err) {
@@ -50,4 +50,4 @@ async function fetchImage(data: ImageDescriptor) {
 
 const registerTaskFunction = (global as any).registerTaskFunction as Function;
 
-registerTaskFunction("fetchImage", fetchImage);
+registerTaskFunction('fetchImage', fetchImage);

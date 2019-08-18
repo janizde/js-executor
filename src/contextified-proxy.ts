@@ -1,5 +1,5 @@
-import WorkerPoolExecutor from "./worker-pool-executor";
-import { Context, FnDescriptor, TransferList } from "./common";
+import WorkerPoolExecutor from './worker-pool-executor';
+import { Context, FnDescriptor, TransferList } from './common';
 
 export default class ContextifiedProxy<C> {
   private readonly executor: WorkerPoolExecutor;

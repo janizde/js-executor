@@ -1,4 +1,4 @@
-import { parentPort } from "worker_threads";
+import { parentPort } from 'worker_threads';
 
 import {
   Command,
@@ -10,16 +10,16 @@ import {
   CommandError,
   CommandImportFunction,
   FnExecType
-} from "./common";
+} from './common';
 
 (() => {
   const contexts: Record<number, any> = {};
-  const globalFunc = Symbol("globalFunc");
+  const globalFunc = Symbol('globalFunc');
   const functionsRegister: Record<symbol, Record<string, Function>> = {
     [globalFunc]: {}
   };
 
-  parentPort.on("message", (message: Command) => {
+  parentPort.on('message', (message: Command) => {
     switch (message.cmd) {
       case CommandKind.execute:
       case CommandKind.map:
@@ -40,10 +40,10 @@ import {
     function registerFunction(fn: Function): void;
     function registerFunction(fnOrName: Function | string, fn?: Function) {
       const name =
-        typeof fnOrName === "function"
-          ? command.defaultName || "default"
+        typeof fnOrName === 'function'
+          ? command.defaultName || 'default'
           : fnOrName;
-      const theFunction = typeof fnOrName === "function" ? fnOrName : fn;
+      const theFunction = typeof fnOrName === 'function' ? fnOrName : fn;
       functionsRegister[globalFunc][name] = theFunction;
     }
 
@@ -58,9 +58,9 @@ import {
     function registerFunction(name: string, fn: Function): void;
     function registerFunction(fn: Function): void;
     function registerFunction(fnOrName: Function | string, fn?: Function) {
-      if (!name && typeof fnOrName === "function") {
+      if (!name && typeof fnOrName === 'function') {
         importedFunction = fnOrName;
-      } else if (typeof fnOrName === "string" && name === fnOrName) {
+      } else if (typeof fnOrName === 'string' && name === fnOrName) {
         importedFunction = fn;
       }
     }
@@ -76,7 +76,7 @@ import {
     const port = command.port;
     const taskFunction = getFunctionFromDescriptor(command.fn);
     const contextValue =
-      typeof command.contextId === "number"
+      typeof command.contextId === 'number'
         ? contexts[command.contextId]
         : undefined;
 
@@ -103,7 +103,7 @@ import {
         break;
 
       case CommandKind.map: {
-        port.on("message", (message: Command) => {
+        port.on('message', (message: Command) => {
           if (message.cmd !== CommandKind.mapElement) {
             return;
           }
@@ -141,8 +141,8 @@ import {
     switch (fnDescriptor.$$exec_type) {
       case FnExecType.transfer:
         return new Function(
-          "data",
-          "context",
+          'data',
+          'context',
           `return (${fnDescriptor.fn})(data, context);`
         );
 

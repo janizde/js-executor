@@ -1,9 +1,9 @@
-import { MessagePort } from "worker_threads";
+import { MessagePort } from 'worker_threads';
 
 export const enum FnExecType {
-  transfer = "transfer",
-  load = "load",
-  ref = "ref"
+  transfer = 'transfer',
+  load = 'load',
+  ref = 'ref'
 }
 
 export interface FnDescriptorTransfer<I, O, C> {
@@ -37,13 +37,13 @@ export type FnWorkerDescriptor =
   | FnDescriptorRef;
 
 export const enum CommandKind {
-  importFunction = "importFunction",
-  sendContext = "sendContext",
-  execute = "execute",
-  map = "map",
-  mapElement = "mapElement",
-  result = "result",
-  error = "error"
+  importFunction = 'importFunction',
+  sendContext = 'sendContext',
+  execute = 'execute',
+  map = 'map',
+  mapElement = 'mapElement',
+  result = 'result',
+  error = 'error'
 }
 
 export interface CommandExecute {

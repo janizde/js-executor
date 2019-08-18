@@ -3,7 +3,7 @@ import {
   FnDescriptorLoad,
   FnDescriptorRef,
   FnExecType
-} from "./common";
+} from './common';
 
 export function transferFn<I, O, C>(
   fn: (data: I, context: C) => O

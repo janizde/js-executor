@@ -1,6 +1,6 @@
 type AbortCallback = () => void;
 
-interface PromiseManager<E, A> {
+export interface PromiseManager<E, A> {
   resolveAll: (value: A) => void;
   rejectAll: (error: Error) => void;
   resolveElement: (value: E, index: number) => void;
@@ -15,7 +15,7 @@ interface PromiseRecord<T> {
 
 type ElementCallback<E> = (element: E, index: number) => void;
 type ErrorCallback = (error: Error, index: number) => void;
-type ThenCallback<A> = (value: A) => any;
+type ThenCallback<A, O> = (value: A) => O;
 type CatchCallback = (reason: any) => any;
 
 function createPromiseRecord<T>(): PromiseRecord<T> {
@@ -30,34 +30,50 @@ function createPromiseRecord<T>(): PromiseRecord<T> {
 }
 
 class ExecutorPromise<E, A> {
-  private readonly onAbort: AbortCallback;
-  private readonly allPromise: PromiseRecord<A>;
-  private readonly elementPromises: Array<PromiseRecord<E>>;
-  private thenCallback?: ThenCallback<A>;
+  private onAbort?: AbortCallback;
+  private allPromise: Promise<A>;
+  private readonly elementPromises: Array<PromiseRecord<E>> = [];
+  private thenCallback?: ThenCallback<A, any>;
   private catchCallback?: CatchCallback;
   private elementCallback?: ElementCallback<E>;
   private errorCallback?: ErrorCallback;
-  private successRegister: Array<{ value: E; index: number }>;
-  private errorRegister: Array<{ reason: Error; index: number }>;
+  private readonly successRegister: Array<{ value: E; index: number }> = [];
+  private readonly errorRegister: Array<{ reason: Error; index: number }> = [];
+  private readonly parent: ExecutorPromise<E, A> | null = null;
 
-  constructor(
-    executor: (manager: PromiseManager<E, A>) => void,
-    onAbort: AbortCallback
+  /**
+   * Creates a new ExecutorPromise with a parent promise and a PromiseRecord
+   * representing the promise relating to the combined result
+   *
+   * @param     parent      Parent ExecutorPromise or `null` if it is the root promise
+   * @param     allPromise  PromiseRecord corresponding to the combined result
+   */
+  private constructor(
+    parent: ExecutorPromise<any, any> | null,
+    allPromise: Promise<A>
   ) {
-    this.onAbort = onAbort;
-    this.allPromise = createPromiseRecord<A>();
-    this.elementPromises = [];
-    this.successRegister = [];
-    this.errorRegister = [];
+    this.parent = parent;
+    this.allPromise = allPromise;
+  }
 
-    const resolveAll = (value: A) => this.allPromise.resolve(value);
-    const rejectAll = (reason: any) => this.allPromise.reject(reason);
+  static forExecutor<E, A>(
+    executor: (manager: PromiseManager<E, A>) => void,
+    onAbort?: AbortCallback
+  ): ExecutorPromise<E, A> {
+    const {
+      resolve: resolveAll,
+      reject: rejectAll,
+      promise: allPromise
+    } = createPromiseRecord<A>();
+
+    const promise = new ExecutorPromise<E, A>(null, allPromise);
+    promise.onAbort = onAbort;
 
     const resolveElement = (element: E, index: number) =>
-      this.getElementPromise(index).resolve(element);
+      promise.getElementPromise(index).resolve(element);
 
     const rejectElement = (error: Error, index: number) =>
-      this.getElementPromise(index).reject(error);
+      promise.getElementPromise(index).reject(error);
 
     const manager: PromiseManager<E, A> = {
       resolveAll,
@@ -67,6 +83,7 @@ class ExecutorPromise<E, A> {
     };
 
     executor(manager);
+    return promise;
   }
 
   private getElementPromise(index: number) {
@@ -88,9 +105,12 @@ class ExecutorPromise<E, A> {
     return elementPromise;
   }
 
-  public then(onFulfilled?: ThenCallback<A>, onRejected?: CatchCallback) {
-    this.allPromise.promise.then(onFulfilled, onRejected);
-    return this;
+  public then<R1 = A, R2 = never>(
+    onFulfilled?: ((value: A) => R1 | PromiseLike<R1>) | undefined | null,
+    onRejected?: ((reason: any) => R2 | PromiseLike<R2>) | undefined | null
+  ) {
+    const chainedPromise = this.allPromise.then(onFulfilled, onRejected);
+    return new ExecutorPromise<E, R1 | R2>(this, chainedPromise);
   }
 
   public catch(onRejected: CatchCallback) {
@@ -99,7 +119,7 @@ class ExecutorPromise<E, A> {
   }
 
   public finally(onFinally: () => void) {
-    return this.allPromise.promise.finally(onFinally);
+    return this.allPromise.finally(onFinally);
   }
 
   public element(onElement: ElementCallback<E>) {

@@ -1,6 +1,6 @@
-import { join } from "path";
+import { join } from 'path';
 
-import { Worker, MessagePort, MessageChannel } from "worker_threads";
+import { Worker, MessagePort, MessageChannel } from 'worker_threads';
 
 import {
   FnDescriptor,
@@ -17,9 +17,9 @@ import {
   CommandResult,
   CommandMap,
   CommandMapElement
-} from "./common";
+} from './common';
 
-import ContextifiedProxy from "./contextified-proxy";
+import ContextifiedProxy from './contextified-proxy';
 
 interface WorkerSession {
   execPort: MessagePort;
@@ -43,7 +43,7 @@ export default class WorkerPoolExecutor {
     const contextRegister: Array<Array<number>> = [];
 
     for (let i = 0; i < numWorkers; ++i) {
-      const worker = new Worker(join(__dirname, "bridge.js"));
+      const worker = new Worker(join(__dirname, 'bridge.js'));
       workers.push(worker);
       contextRegister.push([]);
     }
@@ -141,8 +141,8 @@ export default class WorkerPoolExecutor {
       : [workerPort];
 
     return new Promise<O>((resolve, reject) => {
-      execPort.on("error", e => reject(e));
-      execPort.on("message", (message: Command) => {
+      execPort.on('error', e => reject(e));
+      execPort.on('message', (message: Command) => {
         switch (message.cmd) {
           case CommandKind.result:
             resolve(message.value);
@@ -214,7 +214,7 @@ export default class WorkerPoolExecutor {
       workerSessions[workerId] = session;
 
       session.execPort.on(
-        "message",
+        'message',
         (message: CommandResult | CommandError) => {
           switch (message.cmd) {
             case CommandKind.result:
