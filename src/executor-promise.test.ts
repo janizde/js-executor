@@ -101,7 +101,7 @@ describe('ExecutorPromise', () => {
     expect(onElement).toHaveBeenNthCalledWith(2, 6, 2);
   });
 
-  it.skip('should chain the callbacks for .element', async () => {
+  it('should chain the callbacks for .element', async () => {
     let manager: PromiseManager<number, number> = null;
     const promise = ExecutorPromise.forExecutor<number, number>(m => {
       manager = m;
