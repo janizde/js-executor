@@ -182,6 +182,28 @@ export function sendError(error: Error, port: MessagePort, index?: number) {
   }
 }
 
+/**
+ * Runs the function `taskFunction` by passing it `data` and `context` and sends the results
+ * to the `port`.
+ *
+ * `taskFunction` may be a synchronous function, an async function, or a function returning
+ * a synchronous or asynchronous iterator, e.g. `GeneratorFunction` or `AsyncGeneratorFunction`.
+ *
+ * This function can be called with an index, which will be sent in the `.result` or `.error` messages.
+ * When no index is set and a function returning an iterator is passed, the iterator results will be
+ * sent as intermediate results. When an index is set, intermediate values are not sent (e.g. when calling `.map`)
+ *
+ * When Promises are returned from functions or iterators, they will be awaited before sending the result.
+ * A rejected Promise results in an `.error` message.
+ *
+ * @async
+ * @param     taskFunction    Function to call with `data` and `context`
+ * @param     data            Data to pass as the first parameter
+ * @param     context         Context to pass as the second parameter
+ * @param     port            MessagePort to send `.result` and `.error` messages to
+ * @param     index           Index for the execution
+ * @returns                   Promise resolving when the function has been run
+ */
 export async function runTaskFunction(
   taskFunction: Function,
   data: any,
@@ -189,6 +211,14 @@ export async function runTaskFunction(
   port: MessagePort,
   index?: number
 ) {
+  /**
+   * Sends a result or a promise with the specified index as a `.result` message to `port`.
+   * When `resultOrPromise` is PromiseLike, it will be awaited. Rejections are sent as `.error` messages.
+   * When the result is a `$$Transfer` wrapper, the `transferList` is be passed to `port.postMessage`.
+   *
+   * @param   resultOrPromise     The result or Promise resolving with the result
+   * @param   resultIndex         The index of the result
+   */
   const sendResult = async (
     resultOrPromise: any,
     resultIndex: number | undefined
@@ -214,9 +244,12 @@ export async function runTaskFunction(
   };
 
   try {
+    // Run the task function with data and context
     const result = taskFunction(data, context);
 
     if (result[Symbol.asyncIterator] || result[Symbol.iterator]) {
+      // If the result has an `asyncIterator` or `iterator`, this iterator is spun
+      // until the iterator is done
       const isAsync = !!result[Symbol.asyncIterator];
       const iterator = isAsync
         ? (result[Symbol.asyncIterator]() as AsyncIterableIterator<unknown>)
@@ -227,11 +260,16 @@ export async function runTaskFunction(
 
       do {
         iterCount++;
+
+        // When the iterator is asynchronous, the iterator result is awaited
+        // otherwise it is returned synchronously
         iterResult = isAsync
           ? await (iterator as AsyncIterableIterator<unknown>).next()
           : (iterator as IterableIterator<unknown>).next();
 
         if (!iterResult.done && typeof index !== 'number') {
+          // When an intermediate result arrives and no index for the execution
+          // is specified, fork the sending of the intermediate result with the iteration index
           sendResult(iterResult.value, iterCount);
         }
       } while (!iterResult.done);
@@ -246,23 +284,6 @@ export async function runTaskFunction(
 }
 
 /**
- * Performs the execution of `taskFunction` with the data from the `execute` command
- * and the provided context. When the `taskFunction` is asynchronous and returns a Promise,
- * the resolve value of the promise is sent.
- *
- * @param   command         The command containing the execution payload
- * @param   taskFunction    Function to execute with data and context
- * @param   contextValue    Context value for the execution
- */
-export function performExecute(
-  command: CommandExecute,
-  taskFunction: Function,
-  contextValue: any
-) {
-  runTaskFunction(taskFunction, command.data, contextValue, command.port);
-}
-
-/**
  * Performs the execution of `taskFunction` for each elements, which is sent as `.mapElement`
  * commands over the exclusive message channel.
  *
@@ -273,7 +294,7 @@ export function performExecute(
  * @param     taskFunction    The task function to call for each element
  * @param     contextValue    The value of the context to pass to the task function
  */
-export function performMap(
+export function startMapSession(
   command: CommandMap,
   taskFunction: Function,
   contextValue: any
@@ -326,11 +347,11 @@ export function spawnExecution(command: CommandExecute | CommandMap) {
 
     switch (command.cmd) {
       case CommandKind.execute:
-        performExecute(command, taskFunction, contextValue);
+        runTaskFunction(taskFunction, command.data, contextValue, command.port);
         break;
 
       case CommandKind.map: {
-        performMap(command, taskFunction, contextValue);
+        startMapSession(command, taskFunction, contextValue);
       }
     }
   } catch (err) {
