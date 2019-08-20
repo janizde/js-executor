@@ -31,6 +31,7 @@ export type FnDescriptor<I, O, C> =
   | FnDescriptorTransfer<I, O, C>
   | FnDescriptorLoad
   | FnDescriptorRef;
+
 export type FnWorkerDescriptor =
   | FnDescriptorTransferSerialized
   | FnDescriptorLoad
@@ -42,6 +43,7 @@ export const enum CommandKind {
   execute = 'execute',
   map = 'map',
   mapElement = 'mapElement',
+  mapEnd = 'mapEnd',
   result = 'result',
   error = 'error'
 }
@@ -67,6 +69,10 @@ export interface CommandMapElement {
   index: number;
 }
 
+export interface CommandMapEnd {
+  cmd: CommandKind.mapEnd;
+}
+
 export interface CommandImportFunction {
   cmd: CommandKind.importFunction;
   path: string;
@@ -85,9 +91,16 @@ export interface CommandResult {
   index?: number;
 }
 
+export const enum ErrorKind {
+  internal = 'internal',
+  execution = 'execution'
+}
+
 export interface CommandError {
   cmd: CommandKind.error;
+  kind: ErrorKind;
   message: string;
+  stack?: string;
   index?: number;
 }
 
@@ -97,6 +110,7 @@ export type Command =
   | CommandExecute
   | CommandMap
   | CommandMapElement
+  | CommandMapEnd
   | CommandResult
   | CommandError;
 
