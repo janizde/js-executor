@@ -22,11 +22,15 @@
   "devDependencies": {
     "@types/jest": "^24.0.17",
     "@types/node": "^12.7.1",
+    "@types/pngjs": "^3.3.2",
     "jest": "^24.8.0",
     "nodemon": "^1.19.1",
     "prettier": "^1.18.2",
     "ts-jest": "^24.0.2",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3"
+  },
+  "dependencies": {
+    "pngjs": "^3.4.0"
   }
 }

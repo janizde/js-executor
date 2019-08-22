@@ -249,7 +249,7 @@ export async function runTaskFunction(
     // Run the task function with data and context
     const result = taskFunction(data, context);
 
-    if (result[Symbol.asyncIterator] || result[Symbol.iterator]) {
+    if (result && (result[Symbol.asyncIterator] || result[Symbol.iterator])) {
       // If the result has an `asyncIterator` or `iterator`, this iterator is spun
       // until the iterator is done
       const isAsync = !!result[Symbol.asyncIterator];
