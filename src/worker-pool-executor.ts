@@ -16,14 +16,33 @@ import {
   CommandExecute,
   CommandResult,
   CommandMap,
-  CommandMapElement
+  CommandMapElement,
+  CommandAbort,
+  ErrorKind
 } from './common';
 
 import ContextifiedProxy from './contextified-proxy';
+import ExecutorPromise from './executor-promise';
 
 interface WorkerSession {
   execPort: MessagePort;
   workerPort: MessagePort;
+}
+
+const ABORTED = Symbol('ABORTED');
+
+class WorkerError extends Error {
+  public readonly kind: ErrorKind;
+
+  constructor(message: string, kind: ErrorKind, stack?: string) {
+    super(message);
+    this.stack = stack;
+    this.kind = kind;
+  }
+
+  static fromMessage(message: CommandError) {
+    return new WorkerError(message.message, message.kind, message.stack);
+  }
 }
 
 function* roundRobinSelector(workers: Array<Worker>) {
@@ -54,7 +73,7 @@ export default class WorkerPoolExecutor {
     this.contextCounter = 0;
   }
 
-  private prepareDescriptor(
+  private __prepareDescriptor(
     descriptor: FnDescriptor<any, any, any>
   ): FnWorkerDescriptor {
     switch (descriptor.$$exec_type) {
@@ -140,35 +159,67 @@ export default class WorkerPoolExecutor {
       ? transferList.concat(workerPort)
       : [workerPort];
 
-    return new Promise<O>((resolve, reject) => {
-      execPort.on('error', e => reject(e));
-      execPort.on('message', (message: Command) => {
-        switch (message.cmd) {
-          case CommandKind.result:
-            resolve(message.value);
-            return;
+    return ExecutorPromise.forExecutor(
+      ({
+        resolveAll,
+        rejectAll,
+        resolveElement,
+        rejectElement,
+        setOnAbort
+      }) => {
+        execPort.on('error', e => rejectAll(e));
+        execPort.on('message', (message: Command) => {
+          switch (message.cmd) {
+            case CommandKind.result: {
+              if (typeof message.index === 'number') {
+                resolveElement(message.value, message.index);
+              } else {
+                resolveAll(message.value);
+              }
 
-          case CommandKind.error:
-            const err = new Error(message.message);
-            reject(err);
-            return;
+              break;
+            }
+
+            case CommandKind.error: {
+              const err = WorkerError.fromMessage(message);
+
+              if (typeof message.index === 'number') {
+                rejectElement(err, message.index);
+              } else {
+                rejectAll(err);
+              }
+
+              break;
+            }
+          }
+        });
+
+        const execCommand: CommandExecute = {
+          cmd: CommandKind.execute,
+          port: workerPort,
+          fn: this.__prepareDescriptor(fnDescriptor),
+          data
+        };
+
+        if (context) {
+          this.__maybeSendContext(context, workerIndex);
+          execCommand.contextId = context.id;
         }
-      });
 
-      const execCommand: CommandExecute = {
-        cmd: CommandKind.execute,
-        port: workerPort,
-        fn: this.prepareDescriptor(fnDescriptor),
-        data
-      };
+        worker.postMessage(execCommand, combinedTransferList);
 
-      if (context) {
-        this.__maybeSendContext(context, workerIndex);
-        execCommand.contextId = context.id;
+        const handleAbort = () => {
+          const message: CommandAbort = {
+            cmd: CommandKind.abort
+          };
+
+          execPort.postMessage(message);
+          rejectAll(ABORTED);
+        };
+
+        setOnAbort(handleAbort);
       }
-
-      worker.postMessage(execCommand, combinedTransferList);
-    });
+    );
   }
 
   public map<I, O>(
@@ -185,79 +236,106 @@ export default class WorkerPoolExecutor {
     transferList: TransferList | undefined,
     context: Context<C> | undefined
   ) {
-    const workerSessions = new Array<WorkerSession>(this.workers.length);
-    const fnDescriptorWorker = this.prepareDescriptor(fnDescriptor);
+    return ExecutorPromise.forExecutor<O, Array<O | null>>(
+      ({
+        resolveAll,
+        rejectAll,
+        resolveElement,
+        rejectElement,
+        setOnAbort
+      }) => {
+        const workerSessions = new Array<WorkerSession>(this.workers.length);
+        const fnDescriptorWorker = this.__prepareDescriptor(fnDescriptor);
 
-    const deferred = elements.map(() => {
-      let resolve: (value: O | PromiseLike<O>) => void = null;
-      let reject: (error: Error) => void = null;
+        let isAborted = false;
+        let elementCount = 0;
+        let elementResults: Array<O | null> = new Array(elements.length);
 
-      const promise = new Promise<O>((res, rej) => {
-        resolve = res;
-        reject = rej;
-      });
+        const handleAbort = () => {
+          isAborted = true;
+          const message: CommandAbort = {
+            cmd: CommandKind.abort
+          };
 
-      return { resolve, reject, promise };
-    });
+          workerSessions.forEach(session =>
+            session.execPort.postMessage(message)
+          );
 
-    const getWorkerSession = (workerId: number): WorkerSession => {
-      if (workerSessions[workerId]) {
-        return workerSessions[workerId];
-      }
+          rejectAll(ABORTED);
+        };
 
-      const channel = new MessageChannel();
-      const session: WorkerSession = {
-        execPort: channel.port1,
-        workerPort: channel.port2
-      };
+        setOnAbort(handleAbort);
 
-      workerSessions[workerId] = session;
-
-      session.execPort.on(
-        'message',
-        (message: CommandResult | CommandError) => {
-          switch (message.cmd) {
-            case CommandKind.result:
-              deferred[message.index].resolve(message.value);
-              return;
-
-            case CommandKind.error:
-              console.log(message);
-              deferred[message.index].reject(new Error(message.message));
-              return;
+        const getWorkerSession = (workerId: number): WorkerSession => {
+          if (workerSessions[workerId]) {
+            return workerSessions[workerId];
           }
-        }
-      );
 
-      const mapCommand: CommandMap = {
-        cmd: CommandKind.map,
-        fn: fnDescriptorWorker,
-        port: session.workerPort
-      };
+          const channel = new MessageChannel();
+          const session: WorkerSession = {
+            execPort: channel.port1,
+            workerPort: channel.port2
+          };
 
-      if (context) {
-        this.__maybeSendContext(context, workerId);
-        mapCommand.contextId = context.id;
+          workerSessions[workerId] = session;
+
+          session.execPort.on(
+            'message',
+            (message: CommandResult | CommandError) => {
+              if (isAborted) {
+                return;
+              }
+
+              elementCount++;
+
+              switch (message.cmd) {
+                case CommandKind.result:
+                  resolveElement(message.value, message.index);
+                  elementResults[message.index] = message.value;
+                  break;
+
+                case CommandKind.error:
+                  const err = WorkerError.fromMessage(message);
+                  rejectElement(err, message.index);
+                  elementResults[message.index] = null;
+                  break;
+              }
+
+              if (elementCount >= elements.length) {
+                Promise.resolve().then(() => resolveAll(elementResults));
+              }
+            }
+          );
+
+          const mapCommand: CommandMap = {
+            cmd: CommandKind.map,
+            fn: fnDescriptorWorker,
+            port: session.workerPort
+          };
+
+          if (context) {
+            this.__maybeSendContext(context, workerId);
+            mapCommand.contextId = context.id;
+          }
+
+          const worker = this.workers[workerId];
+          worker.postMessage(mapCommand, [session.workerPort]);
+          return session;
+        };
+
+        elements.forEach((element, index) => {
+          const workerId = this.workerSelector.next().value;
+          const session = getWorkerSession(workerId);
+
+          const mapElementCommand: CommandMapElement = {
+            cmd: CommandKind.mapElement,
+            element,
+            index
+          };
+
+          session.execPort.postMessage(mapElementCommand, transferList);
+        });
       }
-
-      const worker = this.workers[workerId];
-      worker.postMessage(mapCommand, [session.workerPort]);
-      return session;
-    };
-
-    elements.forEach((element, index) => {
-      const workerId = this.workerSelector.next().value;
-      const session = getWorkerSession(workerId);
-
-      const mapElementCommand: CommandMapElement = {
-        cmd: CommandKind.mapElement,
-        element,
-        index
-      };
-
-      session.execPort.postMessage(mapElementCommand, transferList);
-    });
-
-    return Promise.all(deferred.map(d => d.promise));
+    );
   }
 }

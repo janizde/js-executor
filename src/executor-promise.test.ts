@@ -248,8 +248,7 @@ describe('ExecutorPromise', () => {
     it('should call onAbort passed to ExecutorPromise.forExecutor', () => {
       const onAbort = jest.fn();
       const promise = ExecutorPromise.forExecutor<number, number>(
-        () => null,
-        onAbort
+        ({ setOnAbort }) => setOnAbort(onAbort)
       );
 
       // Chain onAbort to child promises

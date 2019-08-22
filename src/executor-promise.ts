@@ -24,6 +24,10 @@ export interface PromiseManager<E, A> {
    * Rejects a single element with the provided reason and index
    */
   rejectElement(reason: any, index: number): void;
+  /**
+   * Registers a callback which is invoked, when the `.abort()` method is called
+   */
+  setOnAbort(onAbort: AbortCallback): void;
 }
 
 /**
@@ -262,8 +266,7 @@ class ExecutorPromise<E, A> {
    * @returns               `ExecutorPromise` for `executor`
    */
   static forExecutor<E, A>(
-    executor: (manager: PromiseManager<E, A>) => void,
-    onAbort?: AbortCallback
+    executor: (manager: PromiseManager<E, A>) => void
   ): ExecutorPromise<E, A> {
     let resolveAll: (value: A) => void;
     let rejectAll: (reason: any) => void;
@@ -271,6 +274,13 @@ class ExecutorPromise<E, A> {
       resolveAll = res;
       rejectAll = rej;
     });
+
+    let abortCallback: AbortCallback | null = null;
+    const onAbort = () => {
+      if (abortCallback) {
+        abortCallback();
+      }
+    };
 
     // Start with an empty promise array, promises will be introduced
     // when calling `resolveElement` or `rejectElement`
@@ -296,11 +306,16 @@ class ExecutorPromise<E, A> {
       elementPromise.introducePromise(promise, index);
     };
 
+    const setOnAbort = (callback: AbortCallback | null) => {
+      abortCallback = callback;
+    };
+
     const manager: PromiseManager<E, A> = {
       resolveAll,
       rejectAll,
       resolveElement,
-      rejectElement
+      rejectElement,
+      setOnAbort
     };
 
     executor(manager);

@@ -50,7 +50,8 @@ function testMap() {
     .importFunction(join(__dirname, 'testFunc.js'), ['fetchImage'])
     .provideContext(ctx)
     .map(refFn('fetchImage'), randomValues)
-    .then(results => console.log(results.map(r => r)))
+    .element((result, index) => console.log('single results', index, result))
+    .then(results => console.log('all results', results.map(r => r)))
     .finally(() => process.exit(0));
 }
 
