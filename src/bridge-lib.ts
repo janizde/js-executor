@@ -96,16 +96,39 @@ export function handleMessage(message: Command, replyPort: MessagePort) {
   }
 }
 
-export async function importFunctionFromModule(path: string, name?: string) {
+/**
+ * Imports a single function by its name from the module under `path` and returns
+ * this function
+ *
+ * @param       path      Path to the module from which to import the function
+ * @param       name      The name of the exported member of the module
+ * @returns               Promise resolving with the function or rejecting with an error
+ */
+export async function importFunctionFromModule(
+  path: string,
+  name: string = 'default'
+) {
   return import(path).then(exportedModule => {
-    if (!name) {
-      return exportedModule.default;
+    const fn = exportedModule[name];
+
+    if (!fn || typeof fn !== 'function') {
+      throw new InternalError(
+        `A function with name ${name} is not exported from module ${path} or is not a function`
+      );
     }
 
-    return exportedModule[name];
+    return fn;
   });
 }
 
+/**
+ * Imports one or more functions from the module under `path` into the global function
+ * register. The names of the exported members to import must be specified in `fnNames`.
+ * The default export can be referred to with the string "default".
+ *
+ * @param     path        Path to the module from which to import the function
+ * @param     fnNames     Names of the functions to import
+ */
 export async function importGlobalFunctionsFromModule(
   path: string,
   fnNames: Array<string> = []
