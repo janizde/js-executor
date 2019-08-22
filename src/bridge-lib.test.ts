@@ -333,5 +333,49 @@ describe('bridge-lib', () => {
         []
       );
     });
+
+    it('should send execution errors inside the task function as .error message', async () => {
+      const port = createFakePort();
+      function* taskFn() {
+        throw new Error('GenericError');
+      }
+
+      Bridge.runTaskFunction(taskFn, 2, undefined, port, 2);
+
+      await spinLoop();
+
+      expect(port.postMessage).toHaveBeenCalledTimes(1);
+
+      expect(port.postMessage).toHaveBeenCalledWith({
+        cmd: CommandKind.error,
+        kind: ErrorKind.execution,
+        message: 'GenericError',
+        stack: expect.any(String),
+        index: 2
+      });
+    });
+
+    it('should send errors from rejected promises as .error message', async () => {
+      const port = createFakePort();
+      async function* taskFn() {
+        const err = new Error('GenericError');
+        return new Promise((_, reject) => setTimeout(() => reject(err), 10));
+      }
+
+      await Promise.all([
+        Bridge.runTaskFunction(taskFn, 2, undefined, port, 2),
+        spinLoop()
+      ]);
+
+      expect(port.postMessage).toHaveBeenCalledTimes(1);
+
+      expect(port.postMessage).toHaveBeenCalledWith({
+        cmd: CommandKind.error,
+        kind: ErrorKind.execution,
+        message: 'GenericError',
+        stack: expect.any(String),
+        index: 2
+      });
+    });
   });
 });
