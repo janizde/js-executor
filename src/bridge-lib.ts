@@ -88,7 +88,7 @@ export function handleMessage(message: Command, replyPort: MessagePort) {
         break;
 
       case CommandKind.importFunction:
-        importGlobalFunctions(message);
+        importGlobalFunctionsFromModule(message.path, message.fnNames);
         break;
     }
   } catch (error) {
@@ -96,26 +96,31 @@ export function handleMessage(message: Command, replyPort: MessagePort) {
   }
 }
 
-/**
- * Imports global functions from the path specified in the command object.
- * Registers a global function `registerFunction`, which can be accessed from the
- * imported script to register a function by name.
- *
- * @param   command     The command object containing path and defaultName
- */
-export function importGlobalFunctions(command: CommandImportFunction) {
-  function registerFunction(fnOrName: Function | string, fn?: Function) {
-    const name =
-      typeof fnOrName === 'function'
-        ? command.defaultName || 'default'
-        : fnOrName;
-    const theFunction = typeof fnOrName === 'function' ? fnOrName : fn;
-    functionsRegister[name] = theFunction;
-  }
+export async function importFunctionFromModule(path: string, name?: string) {
+  return import(path).then(exportedModule => {
+    if (!name) {
+      return exportedModule.default;
+    }
 
-  (global as any).registerTaskFunction = registerFunction;
-  require(command.path);
-  delete (global as any).registerTaskFunction;
+    return exportedModule[name];
+  });
+}
+
+export async function importGlobalFunctionsFromModule(
+  path: string,
+  fnNames: Array<string> = []
+) {
+  return import(path).then(exportedModule => {
+    for (const name of fnNames) {
+      if (!exportedModule[name] || typeof exportedModule[name] !== 'function') {
+        throw new InternalError(
+          `Function "${name}" is not exported from module ${path} or is not a function`
+        );
+      }
+
+      functionsRegister[name] = exportedModule[name];
+    }
+  });
 }
 
 /**
@@ -128,7 +133,7 @@ export function importGlobalFunctions(command: CommandImportFunction) {
  * @returns           The function imported from the script
  * @throws            When the function was not registered or the registered value is not a function
  */
-export function importSingleUseFunction(path: string, name?: string) {
+export function importSingleUseFunctionOld(path: string, name?: string) {
   let importedFunction: Function | null = null;
   function registerFunction(fnOrName: Function | string, fn?: Function) {
     if (!name && typeof fnOrName === 'function') {
@@ -337,9 +342,9 @@ export function startMapSession(
  *
  * @param     command       The command representing the execution
  */
-export function spawnExecution(command: CommandExecute | CommandMap) {
+export async function spawnExecution(command: CommandExecute | CommandMap) {
   try {
-    const taskFunction = getFunctionFromDescriptor(command.fn);
+    const taskFunction = await getFunctionFromDescriptor(command.fn);
     const contextValue =
       typeof command.contextId === 'number'
         ? contextRegister.getContextValue(command.contextId)
@@ -367,9 +372,9 @@ export function spawnExecution(command: CommandExecute | CommandMap) {
  * @returns                 Callable task function
  * @throws                  When the function could not be retrieved
  */
-export function getFunctionFromDescriptor(
+export async function getFunctionFromDescriptor(
   fnDescriptor: FnWorkerDescriptor
-): Function {
+): Promise<Function> {
   switch (fnDescriptor.$$exec_type) {
     case FnExecType.transfer:
       return new Function(
@@ -391,13 +396,10 @@ export function getFunctionFromDescriptor(
     }
 
     case FnExecType.load: {
-      const fn = importSingleUseFunction(fnDescriptor.path, fnDescriptor.name);
-
-      if (!fn) {
-        throw new Error(
-          `Single use function for path ${fnDescriptor.path} and name ${fnDescriptor.name} could not be found.`
-        );
-      }
+      const fn = await importFunctionFromModule(
+        fnDescriptor.path,
+        fnDescriptor.name
+      );
 
       return fn;
     }

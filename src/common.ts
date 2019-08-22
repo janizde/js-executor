@@ -76,7 +76,7 @@ export interface CommandMapEnd {
 export interface CommandImportFunction {
   cmd: CommandKind.importFunction;
   path: string;
-  defaultName?: string;
+  fnNames?: Array<string>;
 }
 
 export interface CommandSendContext {

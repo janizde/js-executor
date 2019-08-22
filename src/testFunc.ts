@@ -11,7 +11,7 @@ interface ImageDescriptor {
   height?: number;
 }
 
-async function fetchImage(data: ImageDescriptor) {
+export async function fetchImage(data: ImageDescriptor) {
   const url = `https://via.placeholder.com/${data.width}${
     data.height ? `x${data.height}` : ''
   }`;
@@ -47,7 +47,3 @@ async function fetchImage(data: ImageDescriptor) {
     console.error(e);
   }
 }
-
-const registerTaskFunction = (global as any).registerTaskFunction as Function;
-
-registerTaskFunction('fetchImage', fetchImage);

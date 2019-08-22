@@ -95,11 +95,11 @@ export default class WorkerPoolExecutor {
     };
   }
 
-  public importFunction(path: string, defaultName?: string) {
+  public importFunction(path: string, fnNames: Array<string>) {
     const command: CommandImportFunction = {
       cmd: CommandKind.importFunction,
       path,
-      defaultName
+      fnNames
     };
 
     this.workers.forEach(worker => worker.postMessage(command));
@@ -222,6 +222,7 @@ export default class WorkerPoolExecutor {
               return;
 
             case CommandKind.error:
+              console.log(message);
               deferred[message.index].reject(new Error(message.message));
               return;
           }
