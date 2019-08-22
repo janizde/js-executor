@@ -8,7 +8,6 @@ import {
   CommandMap,
   CommandResult,
   CommandError,
-  CommandImportFunction,
   FnExecType,
   ErrorKind
 } from './common';
@@ -144,39 +143,6 @@ export async function importGlobalFunctionsFromModule(
       functionsRegister[name] = exportedModule[name];
     }
   });
-}
-
-/**
- * Imports a function for single used from `path`. The function must be
- * registered by the specified `name` when given. When no name is specified
- * the function registered as `default` is used.
- *
- * @param   path      Path to the module registering the task function
- * @param   name      Name of the function to import
- * @returns           The function imported from the script
- * @throws            When the function was not registered or the registered value is not a function
- */
-export function importSingleUseFunctionOld(path: string, name?: string) {
-  let importedFunction: Function | null = null;
-  function registerFunction(fnOrName: Function | string, fn?: Function) {
-    if (!name && typeof fnOrName === 'function') {
-      importedFunction = fnOrName;
-    } else if (typeof fnOrName === 'string' && name === fnOrName) {
-      importedFunction = fn;
-    }
-  }
-
-  (global as any).registerTaskFunction = registerFunction;
-  require(path);
-  delete (global as any).registerFunction;
-
-  if (typeof importedFunction !== 'function') {
-    throw new InternalError(
-      `Function for path ${path} was not registered or the registered value is not a function`
-    );
-  }
-
-  return importedFunction;
 }
 
 /**
