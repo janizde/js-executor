@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import WorkerPoolExecutor from './worker-pool-executor';
 import { loadFn, refFn } from './fn';
 
-const exec = new WorkerPoolExecutor(5);
+const exec = new WorkerPoolExecutor(10);
 async function myFunc(data: Record<string, number>) {
   return new Promise<Record<string, number>>(resolve => {
     setTimeout(() => {
@@ -14,7 +14,6 @@ async function myFunc(data: Record<string, number>) {
         }),
         {} as Record<string, number>
       );
-      console.log('goo');
       resolve(multiplied);
     }, 1000);
   });
@@ -46,13 +45,17 @@ function testMap() {
     });
   }
 
+  const before = process.hrtime();
   exec
     .importFunction(join(__dirname, 'testFunc.js'), ['fetchImage'])
     .provideContext(ctx)
     .map(refFn('fetchImage'), randomValues)
     .element((result, index) => console.log('single results', index, result))
     .then(results => console.log('all results', results.map(r => r)))
-    .finally(() => process.exit(0));
+    .finally(() => {
+      console.log(`total time: ${process.hrtime(before).toString()}s`);
+      process.exit(0);
+    });
 }
 
 testMap();

@@ -45,8 +45,7 @@ export const enum CommandKind {
   mapElement = 'mapElement',
   mapEnd = 'mapEnd',
   result = 'result',
-  error = 'error',
-  abort = 'abort'
+  error = 'error'
 }
 
 export interface CommandExecute {
@@ -105,10 +104,6 @@ export interface CommandError {
   index?: number;
 }
 
-export interface CommandAbort {
-  cmd: CommandKind.abort;
-}
-
 export type Command =
   | CommandImportFunction
   | CommandSendContext
@@ -117,8 +112,7 @@ export type Command =
   | CommandMapElement
   | CommandMapEnd
   | CommandResult
-  | CommandError
-  | CommandAbort;
+  | CommandError;
 
 export type TransferList = Array<ArrayBuffer | MessagePort>;
 

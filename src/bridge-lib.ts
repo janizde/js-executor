@@ -205,6 +205,14 @@ export async function runTaskFunction(
   port: MessagePort,
   index?: number
 ) {
+  // Keep track of the aborted state to stop generators from being iterated
+  let isAborted = false;
+  const handleClosePort = () => {
+    isAborted = true;
+  };
+
+  port.on('close', handleClosePort);
+
   /**
    * Sends a result or a promise with the specified index as a `.result` message to `port`.
    * When `resultOrPromise` is PromiseLike, it will be awaited. Rejections are sent as `.error` messages.
@@ -255,6 +263,12 @@ export async function runTaskFunction(
       do {
         iterCount++;
 
+        // If the session is aborted no more iterator steps
+        // have to be run
+        if (isAborted) {
+          break;
+        }
+
         // When the iterator is asynchronous, the iterator result is awaited
         // otherwise it is returned synchronously
         iterResult = isAsync
@@ -274,6 +288,8 @@ export async function runTaskFunction(
     }
   } catch (error) {
     return sendError(error, port, index);
+  } finally {
+    port.off('close', handleClosePort);
   }
 }
 

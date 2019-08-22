@@ -17,7 +17,6 @@ import {
   CommandResult,
   CommandMap,
   CommandMapElement,
-  CommandAbort,
   ErrorKind
 } from './common';
 
@@ -175,6 +174,7 @@ export default class WorkerPoolExecutor {
                 resolveElement(message.value, message.index);
               } else {
                 resolveAll(message.value);
+                execPort.close();
               }
 
               break;
@@ -187,6 +187,7 @@ export default class WorkerPoolExecutor {
                 rejectElement(err, message.index);
               } else {
                 rejectAll(err);
+                execPort.close();
               }
 
               break;
@@ -209,11 +210,7 @@ export default class WorkerPoolExecutor {
         worker.postMessage(execCommand, combinedTransferList);
 
         const handleAbort = () => {
-          const message: CommandAbort = {
-            cmd: CommandKind.abort
-          };
-
-          execPort.postMessage(message);
+          execPort.close();
           rejectAll(ABORTED);
         };
 
@@ -253,13 +250,9 @@ export default class WorkerPoolExecutor {
 
         const handleAbort = () => {
           isAborted = true;
-          const message: CommandAbort = {
-            cmd: CommandKind.abort
-          };
-
-          workerSessions.forEach(session =>
-            session.execPort.postMessage(message)
-          );
+          workerSessions.forEach(session => {
+            session.execPort.close();
+          });
 
           rejectAll(ABORTED);
         };
@@ -303,6 +296,7 @@ export default class WorkerPoolExecutor {
 
               if (elementCount >= elements.length) {
                 Promise.resolve().then(() => resolveAll(elementResults));
+                session.execPort.close();
               }
             }
           );
