@@ -14,7 +14,9 @@ const spinLoop = () =>
 
 const createFakePort = () => {
   return ({
-    postMessage: jest.fn()
+    postMessage: jest.fn(),
+    on: jest.fn(),
+    off: jest.fn()
   } as unknown) as MessagePort;
 };
 

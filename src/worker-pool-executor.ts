@@ -28,9 +28,13 @@ interface WorkerSession {
   workerPort: MessagePort;
 }
 
-const ABORTED = Symbol('ABORTED');
+// Symbol with which the `ExecutorPromise` is rejected on abortion
+export const ABORTED = Symbol('ABORTED');
 
-class WorkerError extends Error {
+/**
+ * Custom error class for errors coming from a Worker
+ */
+export class WorkerError extends Error {
   public readonly kind: ErrorKind;
 
   constructor(message: string, kind: ErrorKind, stack?: string) {
@@ -44,16 +48,11 @@ class WorkerError extends Error {
   }
 }
 
-function* roundRobinSelector(workers: Array<Worker>) {
-  for (let i = 0; true; ++i) {
-    yield i % workers.length;
-  }
-}
-
-export default class WorkerPoolExecutor {
-  private readonly workers: Array<Worker>;
-  private readonly workerSelector: Iterator<number>;
+class WorkerPool {
+  public readonly workers: Array<Worker>;
+  public readonly workerSelector: Iterator<number>;
   private readonly contextRegister: Array<Array<number>>;
+  private readonly size: number;
   private contextCounter: number;
 
   constructor(numWorkers: number) {
@@ -61,33 +60,19 @@ export default class WorkerPoolExecutor {
     const contextRegister: Array<Array<number>> = [];
 
     for (let i = 0; i < numWorkers; ++i) {
-      const worker = new Worker(join(__dirname, 'bridge.js'));
+      const worker = new Worker(join(__dirname, '..', 'dist', 'bridge.js'));
       workers.push(worker);
       contextRegister.push([]);
     }
 
+    this.size = numWorkers;
     this.workers = workers;
     this.contextRegister = contextRegister;
     this.workerSelector = roundRobinSelector(workers);
     this.contextCounter = 0;
   }
 
-  private __prepareDescriptor(
-    descriptor: FnDescriptor<any, any, any>
-  ): FnWorkerDescriptor {
-    switch (descriptor.$$exec_type) {
-      case FnExecType.transfer:
-        return {
-          $$exec_type: FnExecType.transfer,
-          fn: descriptor.fn.toString()
-        };
-
-      default:
-        return descriptor;
-    }
-  }
-
-  private __maybeSendContext(context: Context<any>, workerId: number) {
+  public ensureContext(context: Context<any>, workerId: number) {
     if (this.contextRegister[workerId].indexOf(context.id) > -1) {
       return;
     }
@@ -102,15 +87,39 @@ export default class WorkerPoolExecutor {
     worker.postMessage(contextCmd, context.transferList);
   }
 
-  private __createContext<C>(
-    value: C,
-    transferList?: TransferList
-  ): Context<C> {
+  public createContext<C>(value: C, transferList?: TransferList): Context<C> {
     return {
       id: ++this.contextCounter,
       value,
       transferList
     };
+  }
+}
+
+function prepareFunctionDescriptor(
+  descriptor: FnDescriptor<any, any, any>
+): FnWorkerDescriptor {
+  if (descriptor.$$exec_type === FnExecType.transfer) {
+    return {
+      $$exec_type: FnExecType.transfer,
+      fn: descriptor.fn.toString()
+    };
+  }
+
+  return descriptor;
+}
+
+function* roundRobinSelector(workers: Array<Worker>) {
+  for (let i = 0; true; ++i) {
+    yield i % workers.length;
+  }
+}
+
+export default class WorkerPoolExecutor {
+  private readonly pool: WorkerPool;
+
+  constructor(numWorkers: number) {
+    this.pool = new WorkerPool(numWorkers);
   }
 
   public importFunction(path: string, fnNames: Array<string>) {
@@ -120,7 +129,7 @@ export default class WorkerPoolExecutor {
       fnNames
     };
 
-    this.workers.forEach(worker => worker.postMessage(command));
+    this.pool.workers.forEach(worker => worker.postMessage(command));
     return this;
   }
 
@@ -128,7 +137,7 @@ export default class WorkerPoolExecutor {
     value: C,
     transferList?: TransferList
   ): ContextifiedProxy<C> {
-    const context = this.__createContext(value, transferList);
+    const context = this.pool.createContext(value, transferList);
     return new ContextifiedProxy(this, context);
   }
 
@@ -151,8 +160,8 @@ export default class WorkerPoolExecutor {
     transferList: TransferList | undefined,
     context: Context<C> | undefined
   ) {
-    const workerIndex = this.workerSelector.next().value;
-    const worker = this.workers[workerIndex];
+    const workerIndex = this.pool.workerSelector.next().value;
+    const worker = this.pool.workers[workerIndex];
     const { port1: execPort, port2: workerPort } = new MessageChannel();
     const combinedTransferList: TransferList = transferList
       ? transferList.concat(workerPort)
@@ -198,12 +207,12 @@ export default class WorkerPoolExecutor {
         const execCommand: CommandExecute = {
           cmd: CommandKind.execute,
           port: workerPort,
-          fn: this.__prepareDescriptor(fnDescriptor),
+          fn: prepareFunctionDescriptor(fnDescriptor),
           data
         };
 
         if (context) {
-          this.__maybeSendContext(context, workerIndex);
+          this.pool.ensureContext(context, workerIndex);
           execCommand.contextId = context.id;
         }
 
@@ -241,8 +250,11 @@ export default class WorkerPoolExecutor {
         rejectElement,
         setOnAbort
       }) => {
-        const workerSessions = new Array<WorkerSession>(this.workers.length);
-        const fnDescriptorWorker = this.__prepareDescriptor(fnDescriptor);
+        const workerSessions = new Array<WorkerSession>(
+          this.pool.workers.length
+        );
+
+        const fnDescriptorWorker = prepareFunctionDescriptor(fnDescriptor);
 
         let isAborted = false;
         let elementCount = 0;
@@ -308,17 +320,17 @@ export default class WorkerPoolExecutor {
           };
 
           if (context) {
-            this.__maybeSendContext(context, workerId);
+            this.pool.ensureContext(context, workerId);
             mapCommand.contextId = context.id;
           }
 
-          const worker = this.workers[workerId];
+          const worker = this.pool.workers[workerId];
           worker.postMessage(mapCommand, [session.workerPort]);
           return session;
         };
 
         elements.forEach((element, index) => {
-          const workerId = this.workerSelector.next().value;
+          const workerId = this.pool.workerSelector.next().value;
           const session = getWorkerSession(workerId);
 
           const mapElementCommand: CommandMapElement = {

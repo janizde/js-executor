@@ -241,7 +241,7 @@ export async function runTaskFunction(
 
       port.postMessage(message, transferList);
     } catch (err) {
-      sendError(err, port, index);
+      sendError(err, port, resultIndex);
     }
   };
 
