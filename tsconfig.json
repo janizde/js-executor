@@ -1,21 +1,17 @@
 {
-    "compilerOptions": {
-      "target": "esnext",
-      "module": "commonjs",
-      "moduleResolution": "node",
-      "noImplicitAny": false,
-      "removeComments": false,
-      "preserveConstEnums": true,
-      "sourceMap": false,
-      "forceConsistentCasingInFileNames": true,
-      "outDir": "dist",
-      "declaration": true
-    },
-    "include": [
-      "src/**/*.ts"
-    ],
-    "exclude": [
-      "src/**/*.spec.ts",
-      "node_modules"
-    ]
-  }
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "strict": false,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "sourceMap": false,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "declaration": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "node_modules"]
+}

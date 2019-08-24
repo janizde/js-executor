@@ -157,7 +157,7 @@ describe('worker-pool-executor', () => {
         const result = await exec
           .execute(
             transferFn(function*(data: number) {
-              const asPromise = resolveVal =>
+              const asPromise = <T>(resolveVal: T): Promise<T> =>
                 new Promise(resolve =>
                   setTimeout(() => resolve(resolveVal), 5)
                 );
@@ -187,7 +187,7 @@ describe('worker-pool-executor', () => {
         const result = await exec
           .execute(
             transferFn(function*(data: number) {
-              const asPromise = resolveVal =>
+              const asPromise = <T>(resolveVal: T): Promise<T> =>
                 new Promise(resolve =>
                   setTimeout(() => resolve(resolveVal), 5)
                 );
@@ -223,7 +223,7 @@ describe('worker-pool-executor', () => {
         return exec
           .execute(
             transferFn(function*(data: number) {
-              const asPromise = resolveVal =>
+              const asPromise = <T>(resolveVal: T): Promise<T> =>
                 new Promise(resolve =>
                   setTimeout(() => resolve(resolveVal), 5)
                 );
@@ -281,7 +281,7 @@ describe('worker-pool-executor', () => {
         return exec
           .execute(
             transferFn(async function*(data: number) {
-              const asPromise = resolveVal =>
+              const asPromise = <T>(resolveVal: T): Promise<T> =>
                 new Promise(resolve =>
                   setTimeout(() => resolve(resolveVal), 5)
                 );
@@ -329,6 +329,68 @@ describe('worker-pool-executor', () => {
             expect(value).toBe(ABORTED);
           })
           .abort();
+      });
+    });
+  });
+
+  describe.only('map', () => {
+    describe('sync function', () => {
+      it('should execute a transferred function and resolve with the results', async () => {
+        const exec = new WorkerPoolExecutor(2);
+        const onElement = jest.fn();
+        const onError = jest.fn();
+
+        const result = await exec
+          .map(
+            transferFn(function(data: number) {
+              return data * 2;
+            }),
+            [0, 1, 2]
+          )
+          .element(onElement, onError);
+
+        expect(result).toEqual([0, 2, 4]);
+        expect(onElement).toHaveBeenCalledTimes(3);
+        expect(onElement).toHaveBeenCalledWith(0, 0);
+        expect(onElement).toHaveBeenCalledWith(2, 1);
+        expect(onElement).toHaveBeenCalledWith(4, 2);
+        expect(onError).not.toHaveBeenCalled();
+      });
+
+      it('should reject the promise when one element throws and error and call .element appropriately', async () => {
+        expect.hasAssertions();
+
+        const exec = new WorkerPoolExecutor(2);
+        const onElement = jest.fn();
+        const onError = jest.fn();
+
+        return exec
+          .map(
+            transferFn(function(data: number) {
+              if (data === 1) {
+                throw new Error('GenericError');
+              }
+
+              return data * 2;
+            }),
+            [0, 1, 2]
+          )
+          .element(onElement, onError)
+          .catch(err => {
+            expect(err).toBeInstanceOf(WorkerError);
+            expect(err.kind).toBe(ErrorKind.execution);
+            expect(err.index).toBe(1);
+            expect(err.message).toBe('GenericError');
+            expect(err.stack).toEqual(expect.any(String));
+
+            // onElement and onError should be called with *all* elements, before the catch callback runs
+            expect(onElement).toHaveBeenCalledTimes(2);
+            expect(onElement).toHaveBeenCalledWith(0, 0);
+            expect(onElement).toHaveBeenCalledWith(4, 2);
+
+            expect(onError).toHaveBeenCalledTimes(1);
+            expect(onError).toHaveBeenCalledWith(expect.any(WorkerError), 1);
+          });
       });
     });
   });

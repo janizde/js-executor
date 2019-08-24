@@ -31,15 +31,27 @@ export const ABORTED = Symbol('ABORTED');
  */
 export class WorkerError extends Error {
   public readonly kind: ErrorKind;
+  public readonly index: number;
 
-  constructor(message: string, kind: ErrorKind, stack?: string) {
+  constructor(
+    message: string,
+    kind: ErrorKind,
+    stack?: string,
+    index?: number
+  ) {
     super(message);
     this.stack = stack;
     this.kind = kind;
+    this.index = index;
   }
 
   static fromMessage(message: CommandError) {
-    return new WorkerError(message.message, message.kind, message.stack);
+    return new WorkerError(
+      message.message,
+      message.kind,
+      message.stack,
+      message.index
+    );
   }
 }
 
@@ -398,12 +410,12 @@ class WorkerMapExecution<I, O, C> {
 
       switch (message.cmd) {
         case CommandKind.result:
-          onElement(message.value, message.index);
+          onElement(message.value, message.index!);
           break;
 
         case CommandKind.error:
           const err = WorkerError.fromMessage(message);
-          onError(err, message.index);
+          onError(err, message.index!);
           break;
       }
     });
@@ -447,6 +459,7 @@ class WorkerMapExecution<I, O, C> {
         // responded to
         let elementCount = 0;
         let elementResults: Array<O | null> = new Array(this.elements.length);
+        let firstError: WorkerError | null = null;
 
         /**
          * Handles the abortion of the `map` execution by closing all `MessageChannels`
@@ -468,8 +481,16 @@ class WorkerMapExecution<I, O, C> {
          * the `ExecutorPromise` with the array of results and closes all `MessageChannels`.
          */
         const afterSettle = () => {
+          elementCount++;
+
           if (elementCount >= this.elements.length) {
-            Promise.resolve().then(() => resolveAll(elementResults));
+            Promise.resolve().then(() => {
+              if (firstError) {
+                rejectAll(firstError);
+              } else {
+                resolveAll(elementResults);
+              }
+            });
             this.sessions.forEach(session => session.execPort.close());
           }
         };
@@ -496,6 +517,11 @@ class WorkerMapExecution<I, O, C> {
          */
         const handleError = (error: WorkerError, index: number) => {
           elementResults[index] = null;
+
+          if (!firstError) {
+            firstError = error;
+          }
+
           rejectElement(error, index);
           afterSettle();
         };
@@ -578,11 +604,11 @@ export default class WorkerPoolExecutor {
    * @returns                     `ExecutorPromise` resolving with the execution result
    */
   public execute<I, O>(
-    fnDescriptor: FnDescriptor<I, O, undefined>,
+    fnDescriptor: FnDescriptor<I, O, never>,
     data: I,
     transferList?: TransferList
   ) {
-    return this.__execute<I, O, undefined>(
+    return this.__execute<I, O, never>(
       fnDescriptor,
       data,
       transferList,
@@ -626,11 +652,16 @@ export default class WorkerPoolExecutor {
    *                              passing single results to `.element`
    */
   public map<I, O>(
-    fnDescriptor: FnDescriptor<I, O, undefined>,
+    fnDescriptor: FnDescriptor<I, O, never>,
     elements: Array<I>,
     transferList?: TransferList
   ) {
-    return this.__map(fnDescriptor, elements, transferList, undefined);
+    return this.__map<I, O, never>(
+      fnDescriptor,
+      elements,
+      transferList,
+      undefined
+    );
   }
 
   /**
