@@ -82,6 +82,7 @@ export default class IdlePeriodExecutor {
   ) {
     return ExecutorPromise.forExecutor(manager => {
       const handleElement = (value: O, index: number | null) => {
+        console.log('handleElement', value);
         if (index === null) {
           manager.resolveAll(value);
         } else {
@@ -183,9 +184,7 @@ class IdlePeriodQueue {
     this.queue.push(element);
 
     if (!this.isCallbackScheduled) {
-      window.requestIdleCallback(this.__handleIdleCallback, {
-        timeout: this.timeout
-      });
+      window.requestIdleCallback(this.__handleIdleCallback);
     }
   }
 
@@ -194,12 +193,14 @@ class IdlePeriodQueue {
   ): Promise<ExecutionSession<I, O, C> | null> {
     try {
       const result = element.fn(element.data, element.context);
+      console.log(result, (result as any)[Symbol.iterator]);
 
       if (
         !result ||
-        !(result as IterableIterator<O>)[Symbol.iterator] ||
-        !(result as AsyncIterableIterator<O>)[Symbol.asyncIterator]
+        (!(result as IterableIterator<O>)[Symbol.iterator] &&
+          !(result as AsyncIterableIterator<O>)[Symbol.asyncIterator])
       ) {
+        console.log('resolve');
         const settledResult = await Promise.resolve(result as O | Promise<O>);
         element.onElement(settledResult, null);
         return null;
@@ -250,6 +251,7 @@ class IdlePeriodQueue {
       }
 
       if (this.queue.length < 1) {
+        this.isCallbackScheduled = false;
         return;
       }
 
@@ -263,10 +265,14 @@ class IdlePeriodQueue {
       this.currentSession = session;
     }
 
-    if (this.queue.length > 0) {
+    if (this.queue.length > 0 || this.currentSession) {
+      this.isCallbackScheduled = true;
+
       window.requestIdleCallback(this.__handleIdleCallback, {
         timeout: this.timeout
       });
+    } else {
+      this.isCallbackScheduled = false;
     }
   }
 }

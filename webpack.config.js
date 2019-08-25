@@ -1,7 +1,14 @@
 const path = require('path');
+const HTMLWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
+  mode: 'development',
   entry: './src/webpack-entry.ts',
+  devServer: {
+    contentBase: path.resolve(__dirname, 'public'),
+    compress: true,
+    port: 3000
+  },
   module: {
     rules: [
       {
@@ -17,5 +24,6 @@ module.exports = {
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'public')
-  }
+  },
+  plugins: [new HTMLWebpackPlugin()]
 };
