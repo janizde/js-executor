@@ -1,42 +1,23 @@
-import WorkerPoolExecutor from './worker-pool-executor';
-import { Context, FnDescriptor, TransferList } from './common';
+import { Context, Executor } from './common';
 
-export default class ContextifiedProxy<C> {
-  private readonly executor: WorkerPoolExecutor;
-  private readonly context: Context<C>;
+export default class ContextifiedProxy {
+  private executor: Executor;
+  private context: Context<any>;
 
-  constructor(executor: WorkerPoolExecutor, context: Context<C>) {
+  constructor(executor: Executor, context: Context<any>) {
     this.executor = executor;
     this.context = context;
   }
 
-  public execute<I, O>(
-    fnDescriptor: FnDescriptor<I, O, C>,
-    data: I,
-    transferList?: TransferList
-  ) {
-    return this.executor.__execute<I, O, C>(
-      fnDescriptor,
-      data,
-      transferList,
-      this.context
-    );
+  execute(...args: Array<any>) {
+    return this.executor.__execute(args, this.context);
   }
 
-  public map<I, O>(
-    fnDescriptor: FnDescriptor<I, O, C>,
-    elements: Array<I>,
-    transferList?: TransferList
-  ) {
-    return this.executor.__map<I, O, C>(
-      fnDescriptor,
-      elements,
-      transferList,
-      this.context
-    );
+  map(...args: Array<any>) {
+    return this.executor.__map(args, this.context);
   }
 
-  public provideContext<C2>(value: C2, transferList?: TransferList) {
-    return this.executor.provideContext<C2>(value, transferList);
+  provideContext(...args: Array<any>) {
+    return this.executor.provideContext(...args);
   }
 }

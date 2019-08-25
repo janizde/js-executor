@@ -17,7 +17,8 @@ import {
   CommandResult,
   CommandMap,
   CommandMapElement,
-  ErrorKind
+  ErrorKind,
+  Executor
 } from './common';
 
 import ContextifiedProxy from './contextified-proxy';
@@ -544,6 +545,29 @@ class WorkerMapExecution<I, O, C> {
 }
 
 /**
+ * Interface descriptor for a `ContextifiedProxy` matching the
+ * signatures of the `WorkerPoolExecutor` methods.
+ */
+interface WorkerPoolContextifiedProxy<C> {
+  execute<I, O>(
+    fnDescriptor: FnDescriptor<I, O, C>,
+    data: I,
+    transferList?: TransferList
+  ): ExecutorPromise<unknown, I>;
+
+  map<I, O>(
+    fnDescriptor: FnDescriptor<I, O, C>,
+    elements: Array<I>,
+    transferList?: TransferList
+  ): ExecutorPromise<I, Array<I>>;
+
+  provideContext<C2>(
+    value: C2,
+    transferList?: TransferList
+  ): WorkerPoolContextifiedProxy<C2>;
+}
+
+/**
  * Executor implementation executing task functions on a WorkerPool of a fixed size
  */
 export default class WorkerPoolExecutor {
@@ -590,9 +614,12 @@ export default class WorkerPoolExecutor {
   public provideContext<C>(
     value: C,
     transferList?: TransferList
-  ): ContextifiedProxy<C> {
+  ): WorkerPoolContextifiedProxy<C> {
     const context = this.pool.createContext(value, transferList);
-    return new ContextifiedProxy(this, context);
+    return new ContextifiedProxy(
+      this as any,
+      context
+    ) as WorkerPoolContextifiedProxy<C>;
   }
 
   /**
@@ -606,12 +633,10 @@ export default class WorkerPoolExecutor {
   public execute<I, O>(
     fnDescriptor: FnDescriptor<I, O, never>,
     data: I,
-    transferList?: TransferList
+    transferList: TransferList = undefined
   ) {
     return this.__execute<I, O, never>(
-      fnDescriptor,
-      data,
-      transferList,
+      [fnDescriptor, data, transferList],
       undefined
     );
   }
@@ -619,16 +644,16 @@ export default class WorkerPoolExecutor {
   /**
    * Internal method for the execution of a single element with or without context.
    *
-   * @param     fnDescriptor      The descriptor of the task function
-   * @param     data              Data to pass as function parameter
-   * @param     transferList      TransferList for `data`
+   * @param     args              Regular invocation arguments
    * @param     context           Context object whose value to pass to the task function
    * @returns                     `ExecutorPromise` resolving with the execution result
    */
   __execute<I, O, C>(
-    fnDescriptor: FnDescriptor<I, O, C>,
-    data: I,
-    transferList: TransferList | undefined,
+    [fnDescriptor, data, transferList]: [
+      FnDescriptor<I, O, C>,
+      I,
+      TransferList | undefined
+    ],
     context: Context<C> | undefined
   ) {
     const execution = new WorkerExecuteExecution(
@@ -654,12 +679,10 @@ export default class WorkerPoolExecutor {
   public map<I, O>(
     fnDescriptor: FnDescriptor<I, O, never>,
     elements: Array<I>,
-    transferList?: TransferList
+    transferList: TransferList = undefined
   ) {
     return this.__map<I, O, never>(
-      fnDescriptor,
-      elements,
-      transferList,
+      [fnDescriptor, elements, transferList],
       undefined
     );
   }
@@ -668,17 +691,17 @@ export default class WorkerPoolExecutor {
    * Internal method for the distribution of multiple task elements onto the WorkerPool
    * with or without context
    *
-   * @param     fnDescriptor      The descriptor of the task function
-   * @param     elements          Elements to pass to the task function
-   * @param     transferList      TransferList for the elements
+   * @param     args              Regular invocation arguments
    * @param     context           Context whose value to pass to the task function for each element
    * @returns                     `ExecutorPromise` resolving with all results and
    *                              passing single results to `.element`
    */
   __map<I, O, C>(
-    fnDescriptor: FnDescriptor<I, O, C>,
-    elements: Array<I>,
-    transferList: TransferList | undefined,
+    [fnDescriptor, elements, transferList]: [
+      FnDescriptor<I, O, C>,
+      Array<I>,
+      TransferList | undefined
+    ],
     context: Context<C> | undefined
   ) {
     const execution = new WorkerMapExecution(
