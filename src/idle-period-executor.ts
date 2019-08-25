@@ -82,7 +82,6 @@ export default class IdlePeriodExecutor {
   ) {
     return ExecutorPromise.forExecutor(manager => {
       const handleElement = (value: O, index: number | null) => {
-        console.log('handleElement', value);
         if (index === null) {
           manager.resolveAll(value);
         } else {
@@ -133,6 +132,7 @@ export default class IdlePeriodExecutor {
         const handleElement = (value: O, iterIndex: number) => {
           if (iterIndex === null) {
             manager.resolveElement(value, index);
+            elementResults[index] = value;
           }
 
           afterSettle();
@@ -140,6 +140,7 @@ export default class IdlePeriodExecutor {
 
         const handleError = (reason: any) => {
           manager.rejectElement(reason, index);
+          elementResults[index] = null;
           afterSettle();
         };
 
@@ -169,6 +170,7 @@ class IdlePeriodQueue {
   private timeout: number | null;
   private queue: Array<QueueElement<any, any, any>>;
   private currentSession: ExecutionSession<any, any, any> | null;
+  private sessionQueue: Array<ExecutionSession<any, any, any>>;
   private isCallbackScheduled: boolean;
 
   constructor(threshold: number, timeout: number | null = null) {
@@ -176,6 +178,7 @@ class IdlePeriodQueue {
     this.timeout = timeout;
     this.queue = [];
     this.isCallbackScheduled = false;
+    this.sessionQueue = [];
     this.currentSession = null;
     this.__handleIdleCallback = this.__handleIdleCallback.bind(this);
   }
@@ -185,24 +188,25 @@ class IdlePeriodQueue {
 
     if (!this.isCallbackScheduled) {
       window.requestIdleCallback(this.__handleIdleCallback);
+      this.isCallbackScheduled = true;
     }
   }
 
-  private async __processElement<I, O, C>(
+  private __processElement<I, O, C>(
     element: QueueElement<I, O, C>
-  ): Promise<ExecutionSession<I, O, C> | null> {
+  ): ExecutionSession<I, O, C> | null {
     try {
       const result = element.fn(element.data, element.context);
-      console.log(result, (result as any)[Symbol.iterator]);
 
       if (
         !result ||
         (!(result as IterableIterator<O>)[Symbol.iterator] &&
           !(result as AsyncIterableIterator<O>)[Symbol.asyncIterator])
       ) {
-        console.log('resolve');
-        const settledResult = await Promise.resolve(result as O | Promise<O>);
-        element.onElement(settledResult, null);
+        Promise.resolve(result as Promise<O> | O).then(res =>
+          element.onElement(res, null)
+        );
+
         return null;
       } else {
         return {
@@ -216,19 +220,37 @@ class IdlePeriodQueue {
     }
   }
 
-  private async __processSessionTick<I, O, C>(
+  private __processSessionTick<I, O, C>(
     session: ExecutionSession<I, O, C>
-  ): Promise<boolean> {
+  ): boolean {
     try {
-      const result = await session.iterator.next();
+      const promiseOrResult = session.iterator.next();
 
-      if (result.done) {
-        session.element.onElement(result.value, null);
+      if (typeof (promiseOrResult as Promise<any>).then === 'function') {
+        const promise = promiseOrResult as Promise<IteratorResult<O>>;
+        promise.then(result => {
+          if (result.done) {
+            session.element.onElement(result.value, null);
+          } else {
+            session.element.onElement(result.value, session.iterIndex);
+            session.iterIndex++;
+
+            this.sessionQueue.push(session);
+          }
+        });
+
         return true;
       } else {
-        session.element.onElement(result.value, session.iterIndex);
-        session.iterIndex++;
-        return false;
+        const result = promiseOrResult as IteratorResult<O>;
+
+        if (result.done) {
+          session.element.onElement(result.value, null);
+          return true;
+        } else {
+          session.element.onElement(result.value, session.iterIndex);
+          session.iterIndex++;
+          return false;
+        }
       }
     } catch (e) {
       session.element.onError(e);
@@ -236,15 +258,26 @@ class IdlePeriodQueue {
     }
   }
 
-  private async __handleIdleCallback(deadline: RequestIdleCallbackDeadline) {
+  private __handleIdleCallback(deadline: RequestIdleCallbackDeadline) {
     while (deadline.timeRemaining() > this.threshold) {
       if (this.currentSession !== null) {
-        const isSessionFinished = await this.__processSessionTick(
+        const isSessionFinished = this.__processSessionTick(
           this.currentSession
         );
 
         if (isSessionFinished) {
           this.currentSession = null;
+        }
+
+        continue;
+      }
+
+      if (this.sessionQueue.length > 0) {
+        const session = this.sessionQueue.shift();
+        const isSessionDone = this.__processSessionTick(session);
+
+        if (!isSessionDone) {
+          this.currentSession = session;
         }
 
         continue;
@@ -256,18 +289,16 @@ class IdlePeriodQueue {
       }
 
       const element = this.queue.shift();
-      const session = await this.__processElement(element);
+      const session = this.__processElement(element);
 
-      if (!session) {
-        continue;
+      if (session) {
+        this.currentSession = this.__processSessionTick(session)
+          ? null
+          : session;
       }
-
-      this.currentSession = session;
     }
 
     if (this.queue.length > 0 || this.currentSession) {
-      this.isCallbackScheduled = true;
-
       window.requestIdleCallback(this.__handleIdleCallback, {
         timeout: this.timeout
       });

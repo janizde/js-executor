@@ -1,6 +1,6 @@
 import IdlePeriodExecutor from './idle-period-executor';
 
-const exec = new IdlePeriodExecutor(5);
+const exec = new IdlePeriodExecutor(0);
 
 const btn = document.createElement('button');
 btn.innerText = 'Start';
@@ -17,25 +17,34 @@ document.body.appendChild(btn);
   let top = 0;
   let left = 0;
 
-  setInterval(() => {
+  const cb = () => {
     top += 5;
     left += 5;
     el.style.top = `${top % window.innerHeight}px`;
     el.style.left = `${left % window.innerWidth}px`;
-  }, 10);
+    window.requestAnimationFrame(cb);
+  };
+
+  window.requestAnimationFrame(cb);
 })();
 
 btn.addEventListener('click', async function() {
   const elements: Array<number> = [];
 
-  for (let i = 0; i < 1000; ++i) {
+  for (let i = 0; i < 50000; ++i) {
     elements.push(Math.random() * 100);
   }
 
-  const result = await exec.map(function(data: number) {
-    for (let i = 0; i < 10000; ++i) {}
-    return Promise.resolve(data * 2);
+  const result = await exec.map(async function*(data: number) {
+    for (let i = 0; i < 50000; ++i) {}
+    yield;
+    for (let i = 0; i < 50000; ++i) {}
+    yield;
+    await new Promise(resolve => resolve());
+    yield;
+    return data * 2;
   }, elements);
 
   console.log(result);
+  document.writeln('finished');
 });
