@@ -127,9 +127,9 @@ describe('bridge-lib', () => {
       const port = createFakePort();
       const data = 2;
       const context = { factor: 4 };
-      let arr: ArrayBuffer = null;
+      let arr: Uint8Array = null;
       function taskFn(data: number, ctx: typeof context) {
-        arr = new ArrayBuffer(1);
+        arr = new Uint8Array(new ArrayBuffer(1));
         arr[0] = data * context.factor;
 
         return {
@@ -145,12 +145,12 @@ describe('bridge-lib', () => {
 
       const expected: CommandResult = {
         cmd: CommandKind.result,
-        value: { foo: expect.any(ArrayBuffer) },
+        value: { foo: expect.any(Uint8Array) },
         index: undefined
       };
 
       expect(port.postMessage).toHaveBeenCalledWith(expected, [
-        expect.any(ArrayBuffer)
+        expect.any(Uint8Array)
       ]);
     });
 
@@ -338,7 +338,7 @@ describe('bridge-lib', () => {
 
     it('should send execution errors inside the task function as .error message', async () => {
       const port = createFakePort();
-      function* taskFn() {
+      function* taskFn(): IterableIterator<never> {
         throw new Error('GenericError');
       }
 

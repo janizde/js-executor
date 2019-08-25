@@ -1,5 +1,5 @@
-const https = require('https');
-const fs = require('fs');
+import * as https from 'https';
+import * as fs from 'fs';
 const Stream = require('stream').Transform;
 const path = require('path');
 

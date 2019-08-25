@@ -333,7 +333,7 @@ describe('worker-pool-executor', () => {
     });
   });
 
-  describe.only('map', () => {
+  describe('map', () => {
     describe('sync function', () => {
       it('should execute a transferred function and resolve with the results', async () => {
         const exec = new WorkerPoolExecutor(2);
@@ -390,6 +390,208 @@ describe('worker-pool-executor', () => {
 
             expect(onError).toHaveBeenCalledTimes(1);
             expect(onError).toHaveBeenCalledWith(expect.any(WorkerError), 1);
+          });
+      });
+    });
+
+    describe('context', () => {
+      it('should provide a context for the task function', async () => {
+        const exec = new WorkerPoolExecutor(2);
+        const context = { factor: 5 };
+
+        const result = await exec.provideContext(context).map(
+          transferFn(function(data: number, context) {
+            return data * context.factor;
+          }),
+          [0, 1, 2]
+        );
+
+        expect(result).toEqual([0, 5, 10]);
+      });
+    });
+
+    describe('async function', () => {
+      it('should return the results of the asynchronous executions', async () => {
+        const exec = new WorkerPoolExecutor(2);
+        const onElement = jest.fn();
+        const onError = jest.fn();
+
+        const result = await exec
+          .map(
+            transferFn(async function(data: number) {
+              const result = await new Promise(r =>
+                setTimeout(() => r(data * 2), 5)
+              );
+              return result;
+            }),
+            [0, 1, 2]
+          )
+          .element(onElement, onError);
+
+        expect(result).toEqual([0, 2, 4]);
+        expect(onElement).toHaveBeenCalledTimes(3);
+        expect(onElement).toHaveBeenCalledWith(0, 0);
+        expect(onElement).toHaveBeenCalledWith(2, 1);
+        expect(onElement).toHaveBeenCalledWith(4, 2);
+        expect(onError).not.toHaveBeenCalled();
+      });
+
+      it('should reject a single promise when an asynchronous function rejects', async () => {
+        expect.hasAssertions();
+
+        const exec = new WorkerPoolExecutor(2);
+        const onElement = jest.fn();
+        const onError = jest.fn();
+
+        return exec
+          .map(
+            transferFn(async function(data: number) {
+              if (data === 1) {
+                return new Promise((_, reject) =>
+                  setTimeout(() => reject(new Error('GenericError')), 5)
+                );
+              }
+
+              return new Promise(r => setTimeout(() => r(data * 2), 5));
+            }),
+            [0, 1, 2]
+          )
+          .element(onElement, onError)
+          .catch(err => {
+            expect(err).toBeInstanceOf(WorkerError);
+            expect(err.kind).toBe(ErrorKind.execution);
+            expect(err.index).toBe(1);
+            expect(err.message).toBe('GenericError');
+            expect(err.stack).toEqual(expect.any(String));
+
+            // onElement and onError should be called with *all* elements, before the catch callback runs
+            expect(onElement).toHaveBeenCalledTimes(2);
+            expect(onElement).toHaveBeenCalledWith(0, 0);
+            expect(onElement).toHaveBeenCalledWith(4, 2);
+
+            expect(onError).toHaveBeenCalledTimes(1);
+            expect(onError).toHaveBeenCalledWith(expect.any(WorkerError), 1);
+          });
+      });
+    });
+
+    describe('generator functions', () => {
+      it('should resolve with the return values of the generators and ignore intermediate results', async () => {
+        const exec = new WorkerPoolExecutor(2);
+        const onElement = jest.fn();
+        const onError = jest.fn();
+
+        const result = await exec
+          .map(
+            transferFn(function*(data: number) {
+              yield data * 1;
+              yield data * 2;
+              return data * 3;
+            }),
+            [1, 2]
+          )
+          .element(onElement, onError);
+
+        expect(result).toEqual([3, 6]);
+        expect(onError).not.toHaveBeenCalled();
+        expect(onElement).toHaveBeenCalledTimes(2);
+        expect(onElement).toHaveBeenCalledWith(3, 0);
+        expect(onElement).toHaveBeenCalledWith(6, 1);
+      });
+
+      it('should resolve with the resolve values of returned promises and ignore intermediate results', async () => {
+        const exec = new WorkerPoolExecutor(2);
+        const onElement = jest.fn();
+        const onError = jest.fn();
+
+        const result = await exec
+          .map(
+            transferFn(function*(data: number) {
+              yield new Promise(resolve =>
+                setTimeout(() => resolve(data * 2), 5)
+              );
+              yield new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('GenericError')), 5)
+              );
+              return new Promise(resolve =>
+                setTimeout(() => resolve(data * 3), 5)
+              );
+            }),
+            [1, 2]
+          )
+          .element(onElement, onError);
+
+        expect(result).toEqual([3, 6]);
+        expect(onError).not.toHaveBeenCalled();
+        expect(onElement).toHaveBeenCalledTimes(2);
+        expect(onElement).toHaveBeenCalledWith(3, 0);
+        expect(onElement).toHaveBeenCalledWith(6, 1);
+      });
+    });
+
+    describe('async generator functions', () => {
+      it('should resolve with the return values of the generators and ignore intermediate results', async () => {
+        const exec = new WorkerPoolExecutor(2);
+        const onElement = jest.fn();
+        const onError = jest.fn();
+
+        const result = await exec
+          .map(
+            transferFn(async function*(data: number) {
+              const wait = () => new Promise(r => setTimeout(r, 5));
+              await wait();
+              yield data * 1;
+              await wait();
+              yield data * 2;
+              await wait();
+              return data * 3;
+            }),
+            [1, 2]
+          )
+          .element(onElement, onError);
+
+        expect(result).toEqual([3, 6]);
+        expect(onError).not.toHaveBeenCalled();
+        expect(onElement).toHaveBeenCalledTimes(2);
+        expect(onElement).toHaveBeenCalledWith(3, 0);
+        expect(onElement).toHaveBeenCalledWith(6, 1);
+      });
+
+      it('should reject an element when an intermediately yielded Promise rejects', async () => {
+        const exec = new WorkerPoolExecutor(2);
+        const onElement = jest.fn();
+        const onError = jest.fn();
+
+        return exec
+          .map(
+            transferFn(async function*(data: number) {
+              const wait = () => new Promise(r => setTimeout(r, 5));
+
+              await wait();
+              yield new Promise(resolve =>
+                setTimeout(() => resolve(data * 2), 5)
+              );
+              await wait();
+              yield new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('GenericError')), 5)
+              );
+              await wait();
+              return new Promise(resolve =>
+                setTimeout(() => resolve(data * 3), 5)
+              );
+            }),
+            [1, 2]
+          )
+          .element(onElement, onError)
+          .catch(err => {
+            expect(err).toBeInstanceOf(WorkerError);
+            expect(err.message).toBe('GenericError');
+            // We cannot be sure which worker responds first
+            expect(err.index).toEqual(expect.any(Number));
+            expect(err.kind).toBe(ErrorKind.execution);
+
+            expect(onElement).not.toHaveBeenCalled();
+            expect(onError).toHaveBeenCalledTimes(2);
           });
       });
     });

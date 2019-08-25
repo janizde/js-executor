@@ -1,5 +1,5 @@
 import { transferFn, loadFn, refFn } from './fn';
-import { FnExecType } from './common';
+import { FnExecType, FnDescriptorLoad } from './common';
 
 describe('fn', () => {
   describe('transferFn', () => {
@@ -20,7 +20,7 @@ describe('fn', () => {
   describe('loadFn', () => {
     it('should create the load function descriptor with no name', () => {
       const result = loadFn('/path/to/file.js');
-      const expected = {
+      const expected: FnDescriptorLoad = {
         $$exec_type: FnExecType.load,
         path: '/path/to/file.js',
         name: undefined
@@ -31,7 +31,7 @@ describe('fn', () => {
 
     it('should create the load function descriptor with name', () => {
       const result = loadFn('/path/to/file.js', 'testFunction');
-      const expected = {
+      const expected: FnDescriptorLoad = {
         $$exec_type: FnExecType.load,
         path: '/path/to/file.js',
         name: 'testFunction'

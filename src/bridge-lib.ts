@@ -275,10 +275,18 @@ export async function runTaskFunction(
           ? await (iterator as AsyncIterableIterator<unknown>).next()
           : (iterator as IterableIterator<unknown>).next();
 
-        if (!iterResult.done && typeof index !== 'number') {
-          // When an intermediate result arrives and no index for the execution
-          // is specified, fork the sending of the intermediate result with the iteration index
-          sendResult(iterResult.value, iterCount);
+        if (!iterResult.done) {
+          if (typeof index !== 'number') {
+            // When an intermediate result arrives and no index for the execution
+            // is specified, fork the sending of the intermediate result with the iteration index
+            sendResult(iterResult.value, iterCount);
+          } else if (
+            typeof (iterResult.value as Promise<any>).then === 'function'
+          ) {
+            // The only case when an iterator can return a Promise is a synchronous generator function
+            // yielding a Promise. When this promise rejects in a `.map` session, the rejection is silenced
+            (iterResult.value as Promise<any>).then(null, () => undefined);
+          }
         }
       } while (!iterResult.done);
 
