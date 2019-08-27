@@ -1,6 +1,4 @@
 import { MessagePort } from 'worker_threads';
-import ExecutorPromise from './executor-promise';
-import ContextifiedProxy from './contextified-proxy';
 
 export const enum FnExecType {
   transfer = 'transfer',
@@ -115,19 +113,3 @@ export type Command =
   | CommandMapEnd
   | CommandResult
   | CommandError;
-
-export type TransferList = Array<ArrayBuffer | MessagePort>;
-
-export interface Context<C> {
-  id: number;
-  value: C;
-  transferList?: TransferList;
-}
-
-export interface Executor {
-  execute(...args: Array<any>): ExecutorPromise<any, any>;
-  __execute(args: Array<any>, context: Context<any>): ExecutorPromise<any, any>;
-  map(...args: Array<any>): ExecutorPromise<any, any>;
-  __map(args: Array<any>, context: Context<any>): ExecutorPromise<any, any>;
-  provideContext: (...args: Array<any>) => ContextifiedProxy;
-}

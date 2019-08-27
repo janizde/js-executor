@@ -1,5 +1,5 @@
 import { transferFn, loadFn, refFn } from './fn';
-import { FnExecType, FnDescriptorLoad } from './common';
+import { FnExecType, FnDescriptorLoad } from './typings';
 
 describe('fn', () => {
   describe('transferFn', () => {

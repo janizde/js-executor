@@ -1,4 +1,4 @@
-import { Context, Executor } from './common';
+import { Context, Executor } from './typings';
 
 export default class ContextifiedProxy {
   private executor: Executor;

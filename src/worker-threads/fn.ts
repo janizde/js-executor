@@ -3,7 +3,7 @@ import {
   FnDescriptorLoad,
   FnDescriptorRef,
   FnExecType
-} from './common';
+} from './typings';
 
 /**
  * Creates a function descriptor object for a function, which is serialized

@@ -1,10 +1,8 @@
-import WorkerPoolExecutor, {
-  WorkerError,
-} from './worker-pool-executor';
+import WorkerPoolExecutor, { WorkerError } from './worker-pool-executor';
 
-import { ABORTED } from './executor-promise';
+import { ABORTED } from './../common/executor-promise';
 import { transferFn } from './fn';
-import { ErrorKind } from './common';
+import { ErrorKind } from './typings';
 
 describe('worker-pool-executor', () => {
   describe('execute', () => {

@@ -6,10 +6,8 @@ import {
   FnDescriptor,
   FnWorkerDescriptor,
   FnExecType,
-  Context,
   CommandSendContext,
   CommandKind,
-  TransferList,
   CommandImportFunction,
   Command,
   CommandError,
@@ -18,10 +16,11 @@ import {
   CommandMap,
   CommandMapElement,
   ErrorKind
-} from './common';
+} from './typings';
 
-import ContextifiedProxy from './contextified-proxy';
-import ExecutorPromise, { ABORTED } from './executor-promise';
+import ContextifiedProxy from './../common/contextified-proxy';
+import ExecutorPromise, { ABORTED } from './../common/executor-promise';
+import { Context, TransferList } from './../common/typings';
 
 /**
  * Custom error class for errors coming from a Worker
@@ -89,7 +88,9 @@ class WorkerPool {
     const contextRegister: Array<Array<number>> = [];
 
     for (let i = 0; i < numWorkers; ++i) {
-      const worker = new Worker(join(__dirname, '..', 'dist', 'bridge.js'));
+      const worker = new Worker(
+        join(__dirname, '..', '..', 'dist', 'worker-threads', 'bridge.js')
+      ); // <<< Worker / Worker
       workers.push(worker);
       contextRegister.push([]);
     }

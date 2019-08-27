@@ -10,7 +10,7 @@ import {
   CommandError,
   FnExecType,
   ErrorKind
-} from './common';
+} from './typings';
 
 export class InternalError extends Error {
   public readonly isInternal: boolean = true;

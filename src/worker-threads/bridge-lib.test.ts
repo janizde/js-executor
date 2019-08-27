@@ -1,6 +1,6 @@
-import { MessageChannel, MessagePort } from 'worker_threads';
+import { MessagePort } from 'worker_threads';
 import * as BridgeType from './bridge-lib';
-import { CommandError, CommandKind, ErrorKind, CommandResult } from './common';
+import { CommandError, CommandKind, ErrorKind, CommandResult } from './typings';
 
 /**
  * Creates a Promise resolving after the next event loop tick,

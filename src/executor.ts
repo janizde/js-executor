@@ -1,7 +1,7 @@
 import { join } from 'path';
 import * as fs from 'fs';
-import WorkerPoolExecutor from './worker-pool-executor';
-import { loadFn, refFn } from './fn';
+import WorkerPoolExecutor from './worker-threads/worker-pool-executor';
+import { refFn } from './worker-threads/fn';
 
 const exec = new WorkerPoolExecutor(10);
 async function myFunc(data: Record<string, number>) {

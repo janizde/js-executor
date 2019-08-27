@@ -1,4 +1,4 @@
-import IdlePeriodExecutor from './idle-period-executor';
+import IdlePeriodExecutor from './idle-period/idle-period-executor';
 
 const exec = new IdlePeriodExecutor(0, 0);
 

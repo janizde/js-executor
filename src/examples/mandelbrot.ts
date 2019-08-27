@@ -1,8 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import WorkerPoolExecutor from './../worker-pool-executor';
-import { transferFn } from '../fn';
-import { PNG } from 'pngjs';
+import WorkerPoolExecutor from './../worker-threads/worker-pool-executor';
+import { transferFn } from '../worker-threads/fn';
 
 const context = {
   width: 800,

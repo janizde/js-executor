@@ -1,6 +1,6 @@
-import { Context } from './common';
-import ExecutorPromise, { ABORTED } from './executor-promise';
-import ContextifiedProxy from './contextified-proxy';
+import { Context } from './../common/typings';
+import ExecutorPromise, { ABORTED } from './../common/executor-promise';
+import ContextifiedProxy from './../common/contextified-proxy';
 
 declare global {
   // https://github.com/Microsoft/TypeScript/issues/21309#issuecomment-376338415
