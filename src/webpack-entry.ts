@@ -35,16 +35,27 @@ btn.addEventListener('click', async function() {
     elements.push(Math.random() * 100);
   }
 
-  const result = await exec.map(async function*(data: number) {
-    for (let i = 0; i < 50000; ++i) {}
-    yield;
-    for (let i = 0; i < 50000; ++i) {}
-    yield;
-    await new Promise(resolve => resolve());
-    yield;
-    return data * 2;
-  }, elements);
+  const p1 = exec
+    .map(function*(data: number) {
+      for (let i = 0; i < 50000; ++i) {}
+      yield;
+      for (let i = 0; i < 50000; ++i) {}
+      yield;
+      //await new Promise(resolve => setTimeout(resolve, 10));
+      yield;
+      return data * 2;
+    }, elements)
+    .then(results => {
+      (window as any).afterFirst = true;
+      console.log('first', results);
+    });
 
-  console.log(result);
-  document.writeln('finished');
+  const p2 = exec
+    .map(function(data: number) {
+      for (let i = 0; i < 500; ++i) {}
+      return data * 2;
+    }, elements)
+    .then(results => console.log('second', results));
+
+  Promise.all([p1, p2]).then(() => document.writeln('finished'));
 });

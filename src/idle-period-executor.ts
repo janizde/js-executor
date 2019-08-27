@@ -2,27 +2,6 @@ import { Context } from './common';
 import ExecutorPromise from './executor-promise';
 import ContextifiedProxy from './contextified-proxy';
 
-// https://github.com/Microsoft/TypeScript/issues/21309#issuecomment-376338415
-type RequestIdleCallbackHandle = any;
-type RequestIdleCallbackOptions = {
-  timeout: number;
-};
-
-type RequestIdleCallbackDeadline = {
-  readonly didTimeout: boolean;
-  timeRemaining: () => number;
-};
-
-declare global {
-  interface Window {
-    requestIdleCallback: (
-      callback: (deadline: RequestIdleCallbackDeadline) => void,
-      opts?: RequestIdleCallbackOptions
-    ) => RequestIdleCallbackHandle;
-    cancelIdleCallback: (handle: RequestIdleCallbackHandle) => void;
-  }
-}
-
 type TaskFunction<I, O, C> = (
   data: I,
   context: C
@@ -133,9 +112,8 @@ export default class IdlePeriodExecutor {
           if (iterIndex === null) {
             manager.resolveElement(value, index);
             elementResults[index] = value;
+            afterSettle();
           }
-
-          afterSettle();
         };
 
         const handleError = (reason: any) => {
