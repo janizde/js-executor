@@ -17,15 +17,11 @@ import {
   CommandResult,
   CommandMap,
   CommandMapElement,
-  ErrorKind,
-  Executor
+  ErrorKind
 } from './common';
 
 import ContextifiedProxy from './contextified-proxy';
-import ExecutorPromise from './executor-promise';
-
-// Symbol with which the `ExecutorPromise` is rejected on abortion
-export const ABORTED = Symbol('ABORTED');
+import ExecutorPromise, { ABORTED } from './executor-promise';
 
 /**
  * Custom error class for errors coming from a Worker

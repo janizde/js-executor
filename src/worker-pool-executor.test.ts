@@ -1,7 +1,8 @@
 import WorkerPoolExecutor, {
   WorkerError,
-  ABORTED
 } from './worker-pool-executor';
+
+import { ABORTED } from './executor-promise';
 import { transferFn } from './fn';
 import { ErrorKind } from './common';
 

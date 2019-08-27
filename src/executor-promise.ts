@@ -1,5 +1,8 @@
 type AbortCallback = () => void;
 
+// Symbol with which the `ExecutorPromise` is rejected on abortion
+export const ABORTED = Symbol('ABORTED');
+
 /**
  * Specifies an object, which is passed to an `ExecutorPromise` executor
  * function, providing methods to manage the promise
