@@ -3,7 +3,10 @@ const HTMLWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  entry: './src/webpack-entry.ts',
+  entry: {
+    main: './src/webpack-entry.ts',
+    workerBridge: './src/web-workers/bridge.ts'
+  },
   devServer: {
     contentBase: path.resolve(__dirname, 'public'),
     compress: true,
@@ -22,8 +25,15 @@ module.exports = {
     extensions: ['.ts', '.js']
   },
   output: {
-    filename: 'bundle.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'public')
   },
-  plugins: [new HTMLWebpackPlugin()]
+  plugins: [
+    new HTMLWebpackPlugin({
+      chunks: ['main']
+    })
+  ],
+  stats: {
+    warnings: false
+  }
 };

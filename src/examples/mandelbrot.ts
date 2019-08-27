@@ -1,18 +1,14 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import WorkerPoolExecutor from './../worker-threads/worker-pool-executor';
-import { transferFn } from '../worker-threads/fn';
+import WorkerPoolExecutor from './../web-workers/worker-pool-executor';
+import { transferFn } from '../web-workers/fn';
+import ExecutorPromise, { ABORTED } from '../common/executor-promise';
 
 const context = {
-  width: 800,
-  height: 800,
-  panX: 0,
-  panY: 0,
-  magnificationFactor: 600
+  width: 500,
+  height: 500,
+  panX: 1,
+  panY: 1,
+  magnificationFactor: 1
 };
-
-const bytes = context.width * context.height * 4;
-const buff = new SharedArrayBuffer(bytes);
 
 interface Data {
   fromRow: number;
@@ -25,63 +21,91 @@ function mandelbrot(
   { width, magnificationFactor, panX, panY }: typeof context
 ) {
   const arr = new Uint8Array(buffer);
+  const maxIterations = 100;
 
   for (let y = fromRow; y < toRow; ++y) {
     for (let x = 0; x < width; ++x) {
       let realComp = x / magnificationFactor - panX;
       let imagComp = y / magnificationFactor - panY;
 
-      for (let i = 0; i < 10; ++i) {
-        let tempRealComp = realComp * realComp - imagComp * imagComp + x;
-        imagComp = 2 * realComp * imagComp + y;
-        realComp = tempRealComp;
+      const realCompCopy = realComp;
+      const imagCompCopy = imagComp;
+
+      let n = 0;
+
+      while (n < maxIterations) {
+        let tempRealComp = realComp * realComp - imagComp * imagComp;
+        let tempImagComp = 2 * realComp * imagComp;
+        realComp = tempRealComp + realCompCopy;
+        imagComp = tempImagComp + imagCompCopy;
+
+        if (realComp * realComp + imagComp * imagComp > 16) {
+          break;
+        }
+
+        ++n;
       }
 
-      const color: [number, number, number] =
-        realComp * imagComp < 5 ? [0, 0, 0] : [0xff, 0xff, 0xff];
+      const channelVal = (n * 255) / maxIterations;
 
       const startOffset = (y * width + x) * 4;
-      Atomics.store(arr, startOffset, color[0]);
-      Atomics.store(arr, startOffset + 1, color[1]);
-      Atomics.store(arr, startOffset + 2, color[2]);
-      Atomics.store(arr, startOffset + 3, 0xff);
+      arr[startOffset] = channelVal;
+      arr[startOffset + 1] = channelVal;
+      arr[startOffset + 2] = channelVal;
+      arr[startOffset + 3] = 0xff;
     }
   }
 }
 
-const slices: Array<Data> = [
-  {
-    fromRow: 0,
-    toRow: 200,
-    buffer: buff
-  },
-  {
-    fromRow: 200,
-    toRow: 400,
-    buffer: buff
-  },
-  {
-    fromRow: 400,
-    toRow: 600,
-    buffer: buff
-  },
-  {
-    fromRow: 600,
-    toRow: 800,
-    buffer: buff
+export default async function testMandelbrot() {
+  const canvas = document.createElement('canvas');
+  document.body.appendChild(canvas);
+  const bytes = context.width * context.height * 4;
+  const buff = new SharedArrayBuffer(bytes);
+  const executor = new WorkerPoolExecutor(4);
+
+  let aborted = false;
+
+  window.addEventListener('keyup', () => {
+    aborted = true;
+  });
+
+  async function recreate() {
+    const numSlices = 4;
+    const sliceSize = context.height / numSlices;
+    const slices: Array<Data> = [];
+
+    for (let i = 0; i < numSlices; ++i) {
+      slices.push({
+        fromRow: i * sliceSize,
+        toRow: (i + 1) * sliceSize,
+        buffer: buff
+      });
+    }
+
+    return executor
+      .provideContext(context)
+      .map(transferFn(mandelbrot), slices)
+      .then(() => {
+        canvas.width = context.width;
+        canvas.height = context.height;
+        const ctx = canvas.getContext('2d');
+        const imageData = ctx.createImageData(context.width, context.height);
+        const buffArr = new Uint8ClampedArray(buff);
+
+        imageData.data.set(buffArr, 0);
+        ctx.putImageData(imageData, 0, 0);
+      })
+      .catch(err => {
+        if (err !== ABORTED) {
+          console.error(err);
+        }
+      });
   }
-];
 
-const executor = new WorkerPoolExecutor(4);
-
-executor
-  .provideContext(context)
-  .map(transferFn(mandelbrot), slices)
-  .then(() => {
-    return new Promise((resolve, reject) => {
-      new OffscreenCanvas(context.width, context.height);
-      resolve();
-    });
-  })
-  .catch(err => console.error(err))
-  .finally(() => process.exit(0));
+  while (!aborted) {
+    context.magnificationFactor++;
+    await new Promise(res => setTimeout(res, 10));
+    await recreate();
+  }
+}
