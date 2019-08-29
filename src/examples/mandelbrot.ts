@@ -1,6 +1,6 @@
 import WorkerPoolExecutor from './../web-workers/worker-pool-executor';
 import { transferFn } from '../web-workers/fn';
-import ExecutorPromise, { ABORTED } from '../common/executor-promise';
+import { ABORTED } from '../common/executor-promise';
 
 const context = {
   width: 500,

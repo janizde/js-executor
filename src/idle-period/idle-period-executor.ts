@@ -438,6 +438,14 @@ class IdlePeriodQueue {
 
               // Push the session into the `asyncSessionQueue` once the Promise resolved
               this.asyncSessionQueue.push(session);
+
+              if (!this.isCallbackScheduled) {
+                window.requestIdleCallback(this.__handleIdleCallback, {
+                  timeout: this.timeout
+                });
+
+                this.isCallbackScheduled = true;
+              }
             }
           },
           reason => {

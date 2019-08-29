@@ -1,8 +1,8 @@
-/*import IdlePeriodExecutor from './idle-period/idle-period-executor';
+import IdlePeriodExecutor from './idle-period/idle-period-executor-each';
 
-const exec = new IdlePeriodExecutor(0, 0);*/
+const exec = new IdlePeriodExecutor(0, 0);
 
-import testMandelbrot from './examples/mandelbrot';
+// import testMandelbrot from './examples/mandelbrot';
 
 const btn = document.createElement('button');
 btn.innerText = 'Start';
@@ -29,27 +29,31 @@ document.body.appendChild(btn);
 
   window.requestAnimationFrame(cb);
 })();
-/*
+
 btn.addEventListener(
   'click',
   async function() {
     const elements: Array<number> = [];
 
-    for (let i = 0; i < 500; ++i) {
+    for (let i = 0; i < 5000; ++i) {
       elements.push(Math.random() * 100);
     }
 
+    const before = new Date().getTime();
     const p1 = exec
-      .map(
-        transferFn(function(data: number) {
-          for (let i = 0; i < 50000000; ++i) {}
-          return data * 2;
-        }),
-        elements
-      )
+      .map(function*(data: number) {
+        for (let i = 0; i < 1000; ++i) {}
+        yield;
+        for (let i = 0; i < 1000; ++i) {}
+        yield;
+        for (let i = 0; i < 1000; ++i) {}
+        yield;
+        return data * 2;
+      }, elements)
       .then(results => {
-        (window as any).afterFirst = true;
-        console.log('first', results);
+        const after = new Date().getTime();
+        console.log(results);
+        console.log(after - before);
       })
       .catch(e => console.log('error', e));
 
@@ -57,8 +61,7 @@ btn.addEventListener(
   },
   { once: true }
 );
-*/
 
-btn.addEventListener('click', () => {
-  testMandelbrot();
-});
+// btn.addEventListener('click', () => {
+//   testMandelbrot();
+// });
