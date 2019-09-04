@@ -2,7 +2,10 @@ import IdlePeriodExecutor from './idle-period/idle-period-executor-each';
 
 const exec = new IdlePeriodExecutor(0, 0);
 
-// import testMandelbrot from './examples/mandelbrot';
+import {
+  mandelbrotSync,
+  testMandelbrotPoolAnimationFrame
+} from './examples/mandelbrot';
 
 const btn = document.createElement('button');
 btn.innerText = 'Start';
@@ -30,6 +33,7 @@ document.body.appendChild(btn);
   window.requestAnimationFrame(cb);
 })();
 
+/*
 btn.addEventListener(
   'click',
   async function() {
@@ -60,8 +64,8 @@ btn.addEventListener(
     Promise.all([p1]).then(() => document.writeln('finished'));
   },
   { once: true }
-);
+);*/
 
-// btn.addEventListener('click', () => {
-//   testMandelbrot();
-// });
+btn.addEventListener('click', () => {
+  testMandelbrotPoolAnimationFrame();
+});
