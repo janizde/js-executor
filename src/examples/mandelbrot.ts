@@ -17,7 +17,7 @@ interface Data {
   buffer: SharedArrayBuffer;
 }
 
-function mandelbrot(
+export function mandelbrot(
   { fromRow, toRow, buffer }: Data,
   { width, magnificationFactor, panX, panY }: typeof context
 ) {
@@ -68,7 +68,7 @@ function mandelbrot(
 
   const arr = new Uint8Array(buffer);
   const maxIterations = 20;
-  const numSamples = 4;
+  const numSamples = 8;
 
   function getNOf(x: number, y: number) {
     let realComp = x / magnificationFactor - panX;
@@ -169,7 +169,7 @@ export async function mandelbrotSync() {
 
   while (!aborted) {
     context.magnificationFactor++;
-    await new Promise(res => setTimeout(res, 100));
+    await new Promise(res => setTimeout(res, 16.5));
     recreate();
   }
 }
@@ -190,7 +190,7 @@ export async function mandelbrotIdleCallback() {
   }
 }
 
-export async function testMandelbrotPool() {
+export async function mandelbrotPool() {
   const [canvas, buffer] = prepare();
   const executor = new WorkerPoolExecutor(4);
 
@@ -202,11 +202,6 @@ export async function testMandelbrotPool() {
       .map(transferFn(mandelbrot), slices)
       .then(() => {
         printImageData(canvas, buffer);
-      })
-      .catch(err => {
-        if (err !== ABORTED) {
-          console.error(err);
-        }
       });
   }
 
@@ -216,24 +211,19 @@ export async function testMandelbrotPool() {
   }
 }
 
-export async function testMandelbrotPoolAnimationFrame() {
+export async function mandelbrotPoolAnimationFrame() {
   const [canvas, buffer] = prepare();
   const executor = new WorkerPoolExecutor(4);
 
   async function recreate() {
     context.magnificationFactor++;
-    const slices = createSlices(100, buffer);
+    const slices = createSlices(4, buffer);
 
     await executor
       .provideContext(context)
       .map(transferFn(mandelbrot), slices)
       .then(() => {
         printImageData(canvas, buffer);
-      })
-      .catch(err => {
-        if (err !== ABORTED) {
-          console.error(err);
-        }
       });
 
     window.requestAnimationFrame(recreate);
@@ -242,7 +232,7 @@ export async function testMandelbrotPoolAnimationFrame() {
   window.requestAnimationFrame(recreate);
 }
 
-export async function testMandelbrotWorker() {
+export async function mandelbrotWorker() {
   const [canvas, buffer] = prepare();
   const executor = new WorkerPoolExecutor(1);
 
@@ -254,11 +244,6 @@ export async function testMandelbrotWorker() {
       .map(transferFn(mandelbrot), slices)
       .then(() => {
         printImageData(canvas, buffer);
-      })
-      .catch(err => {
-        if (err !== ABORTED) {
-          console.error(err);
-        }
       });
   }
 

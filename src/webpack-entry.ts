@@ -1,15 +1,5 @@
-import IdlePeriodExecutor from './idle-period/idle-period-executor-each';
-
-const exec = new IdlePeriodExecutor(0, 0);
-
-import {
-  mandelbrotSync,
-  testMandelbrotPoolAnimationFrame
-} from './examples/mandelbrot';
-
-const btn = document.createElement('button');
-btn.innerText = 'Start';
-document.body.appendChild(btn);
+import * as Examples from './examples/mandelbrot';
+import { mandelbrotVanillaPool } from './examples/vanilla';
 
 (() => {
   const el = document.createElement('div');
@@ -17,6 +7,7 @@ document.body.appendChild(btn);
   el.style.position = 'absolute';
   el.style.width = '50px';
   el.style.height = '50px';
+  el.style.border = '1px solid green';
   document.body.appendChild(el);
 
   let top = 0;
@@ -33,39 +24,44 @@ document.body.appendChild(btn);
   window.requestAnimationFrame(cb);
 })();
 
-/*
-btn.addEventListener(
-  'click',
-  async function() {
-    const elements: Array<number> = [];
+const buttonsCont = document.createElement('div');
+document.body.appendChild(buttonsCont);
+function createButton(label: string) {
+  const btn = document.createElement('button');
+  btn.innerText = label;
+  buttonsCont.appendChild(btn);
+  return btn;
+}
 
-    for (let i = 0; i < 5000; ++i) {
-      elements.push(Math.random() * 100);
+let n = 0;
+
+(() => {
+  const btnBlock = createButton('Block Main Thread');
+  btnBlock.addEventListener('click', () => {
+    for (let i = 0; i < 10000; ++i) {
+      for (let j = 0; j < 1000; ++j) {
+        n = Math.pow(i, j);
+      }
     }
+  });
 
-    const before = new Date().getTime();
-    const p1 = exec
-      .map(function*(data: number) {
-        for (let i = 0; i < 1000; ++i) {}
-        yield;
-        for (let i = 0; i < 1000; ++i) {}
-        yield;
-        for (let i = 0; i < 1000; ++i) {}
-        yield;
-        return data * 2;
-      }, elements)
-      .then(results => {
-        const after = new Date().getTime();
-        console.log(results);
-        console.log(after - before);
-      })
-      .catch(e => console.log('error', e));
+  const btnSync = createButton('Sync setTimeout');
+  btnSync.addEventListener('click', () => Examples.mandelbrotSync());
 
-    Promise.all([p1]).then(() => document.writeln('finished'));
-  },
-  { once: true }
-);*/
+  const btnIdleCb = createButton('Idle Callback');
+  btnIdleCb.addEventListener('click', () => Examples.mandelbrotIdleCallback());
 
-btn.addEventListener('click', () => {
-  testMandelbrotPoolAnimationFrame();
-});
+  const btnWorker = createButton('Single Worker');
+  btnWorker.addEventListener('click', () => Examples.mandelbrotWorker());
+
+  const btnPool = createButton('Worker Pool');
+  btnPool.addEventListener('click', () => Examples.mandelbrotPool());
+
+  const btnPoolAnimFrame = createButton('Pool Animation Frame');
+  btnPoolAnimFrame.addEventListener('click', () =>
+    Examples.mandelbrotPoolAnimationFrame()
+  );
+
+  const btnVanilla = createButton('Vanilla Worker Pool');
+  btnVanilla.addEventListener('click', () => mandelbrotVanillaPool());
+})();

@@ -5,7 +5,8 @@ module.exports = {
   mode: 'development',
   entry: {
     main: './src/webpack-entry.ts',
-    workerBridge: './src/web-workers/bridge.ts'
+    workerBridge: './src/web-workers/bridge.ts',
+    vanillaWorker: './src/examples/vanilla-worker.ts'
   },
   devServer: {
     contentBase: path.resolve(__dirname, 'public'),
