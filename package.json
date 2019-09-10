@@ -11,7 +11,8 @@
     "prettify": "prettier --write src/**/*.ts",
     "clean": "rm -rf dist || exit 0",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "server": "webpack-dev-server"
   },
   "repository": {
     "type": "git",
