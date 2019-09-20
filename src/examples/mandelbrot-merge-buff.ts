@@ -86,7 +86,7 @@ export function mandelbrot(
       realComp = tempRealComp + realCompCopy;
       imagComp = tempImagComp + imagCompCopy;
 
-      if (realComp * realComp + imagComp * imagComp > 16) {
+      if (realComp * realComp + imagComp * imagComp > 4) {
         break;
       }
 

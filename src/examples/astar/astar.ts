@@ -1,95 +1,51 @@
-interface Node {
+import { Grid, Node, createGrid, enhanceWithNeighbors } from './create';
+
+interface NodeState {
+  f: number;
+  g: number;
+  parent: Node;
+}
+
+interface Point {
   x: number;
   y: number;
-  neighbors: Array<Node>;
-  isWall: boolean;
-  previous: Node | null;
 }
 
-type Grid = Array<Node>;
+function findNonWallPoint(grid: Grid): Point {
+  const p: Point = {
+    x: Math.floor(Math.random() * grid.cols),
+    y: Math.floor(Math.random() * grid.rows)
+  };
 
-const rows = 50;
-const cols = 50;
-
-function addIfNoWall(target: Node, source: Node) {
-  if (!source.isWall) {
-    target.neighbors.push(source);
-  }
-}
-
-function createGrid() {
-  const grid: Grid = new Array(cols * rows);
-
-  for (let x = 0; x < cols; ++x) {
-    for (let y = 0; y < rows; ++y) {
-      grid[y * cols + x] = {
-        x,
-        y,
-        isWall: Math.random() < 0.4,
-        neighbors: [],
-        previous: null
-      };
-    }
-  }
-
-  grid[0].isWall = false;
-  grid[grid.length - 1].isWall = false;
-  console.log('init grid', grid);
-
-  const idx = (x: number, y: number) => y * cols + x;
-
-  for (let x = 0; x < cols; ++x) {
-    for (let y = 0; y < rows; ++y) {
-      const node = grid[y * cols + x];
-
-      if (x < cols - 1) {
-        addIfNoWall(node, grid[idx(x + 1, y)]);
-      }
-
-      if (x > 0) {
-        addIfNoWall(node, grid[idx(x - 1, y)]);
-      }
-
-      if (y < rows - 1) {
-        addIfNoWall(node, grid[idx(x, y + 1)]);
-      }
-
-      if (y > 0) {
-        addIfNoWall(node, grid[idx(x, y - 1)]);
-      }
-
-      if (x > 0 && y > 0) {
-        addIfNoWall(node, grid[idx(x - 1, y - 1)]);
-      }
-
-      if (x < cols - 1 && y > 0) {
-        addIfNoWall(node, grid[idx(x + 1, y - 1)]);
-      }
-
-      if (x > 0 && y < rows - 1) {
-        addIfNoWall(node, grid[idx(x - 1, y + 1)]);
-      }
-
-      if (x < cols - 1 && y < rows - 1) {
-        addIfNoWall(node, grid[idx(x + 1, y + 1)]);
-      }
-    }
-  }
-
-  return grid;
+  const node = grid.nodes[p.y * grid.cols + p.x];
+  return node.isWall ? findNonWallPoint(grid) : p;
 }
 
 export function testAStar() {
-  const grid = createGrid();
+  let grid = createGrid(200, 200);
+  console.log('grid', grid);
+  grid = enhanceWithNeighbors(grid);
+  const start = findNonWallPoint(grid);
+  const end = findNonWallPoint(grid);
+  const path = findShortestPath(grid, start, end);
+  console.log('path', grid, path, start, end);
+}
+
+function findShortestPath(
+  grid: Grid,
+  startPoint: Point,
+  endPoint: Point
+): Array<Node> | null {
   const openSet = new Set<Node>();
   const closedSet = new Set<Node>();
   const globalPath: Array<Node> = [];
 
   const f = new Map<Node, number>();
   const g = new Map<Node, number>();
+  const parent = new Map<Node, Node>();
 
-  openSet.add(grid[0]);
-  const end = grid[grid.length - 1];
+  openSet.add(grid.nodes[startPoint.y * grid.cols + startPoint.x]);
+  const end = grid.nodes[endPoint.y * grid.cols + endPoint.y];
 
   function dist(a: Node, b: Node) {
     const dx = a.x - b.x;
@@ -108,13 +64,12 @@ export function testAStar() {
     if (current === end) {
       const path: Array<Node> = [];
       let tmp = current;
-      while (tmp !== null) {
+      while (tmp) {
         path.push(tmp);
-        tmp = tmp.previous;
+        tmp = parent.get(tmp);
       }
 
-      console.log(path, globalPath);
-      return;
+      return path;
     }
 
     openSet.delete(current);
@@ -137,10 +92,10 @@ export function testAStar() {
       if (newPath) {
         g.set(n, tempG);
         f.set(n, g.get(n) + dist(n, end));
-        n.previous = current;
+        parent.set(n, current);
       }
     }
   }
 
-  console.log('no solution');
+  return null;
 }
