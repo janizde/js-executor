@@ -1,5 +1,7 @@
-import * as Examples from './examples/mandelbrot';
+import * as Examples from './examples/mandelbrot-merge-buff';
+import { drawMandelbrot } from './examples/mandelbrot-thesis';
 import { mandelbrotVanillaPool } from './examples/vanilla';
+import { testAStar } from './examples/astar/astar';
 
 (() => {
   const el = document.createElement('div');
@@ -51,7 +53,13 @@ let n = 0;
   const btnIdleCb = createButton('Idle Callback');
   btnIdleCb.addEventListener('click', () => Examples.mandelbrotIdleCallback());
 
-  const btnWorker = createButton('Single Worker');
+  const btnThesis = createButton('Thesis');
+  btnThesis.addEventListener('click', () => drawMandelbrot());
+
+  const btnAStar = createButton('A*');
+  btnAStar.addEventListener('click', () => testAStar());
+
+  /*const btnWorker = createButton('Single Worker');
   btnWorker.addEventListener('click', () => Examples.mandelbrotWorker());
 
   const btnPool = createButton('Worker Pool');
@@ -63,5 +71,5 @@ let n = 0;
   );
 
   const btnVanilla = createButton('Vanilla Worker Pool');
-  btnVanilla.addEventListener('click', () => mandelbrotVanillaPool());
+  btnVanilla.addEventListener('click', () => mandelbrotVanillaPool());*/
 })();

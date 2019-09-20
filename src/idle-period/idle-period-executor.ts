@@ -36,12 +36,12 @@ interface IdlePeriodContextifiedProxy<C> {
   execute<I, O>(
     fn: TaskFunction<I, O, C>,
     data: I
-  ): ExecutorPromise<unknown, I>;
+  ): ExecutorPromise<unknown, O>;
 
   map<I, O>(
     fn: TaskFunction<I, O, C>,
     elements: Array<I>
-  ): ExecutorPromise<I, Array<I>>;
+  ): ExecutorPromise<O, Array<O>>;
 
   provideContext<C2>(value: C2): IdlePeriodContextifiedProxy<C2>;
 }
