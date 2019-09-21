@@ -229,7 +229,7 @@ export async function runTaskFunction(
       const result = await Promise.resolve(resultOrPromise);
 
       const hasTransfer =
-        typeof result === 'object' && result.$$transfer === true;
+        result && typeof result === 'object' && result.$$transfer === true;
 
       const resultValue = hasTransfer ? result.value : result;
       const transferList = hasTransfer ? result.transferList : [];

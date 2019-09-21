@@ -6,12 +6,12 @@ interface NodeState {
   parent: Node;
 }
 
-interface Point {
+export interface Point {
   x: number;
   y: number;
 }
 
-function findNonWallPoint(grid: Grid): Point {
+export function findNonWallPoint(grid: Grid): Point {
   const p: Point = {
     x: Math.floor(Math.random() * grid.cols),
     y: Math.floor(Math.random() * grid.rows)
@@ -21,17 +21,7 @@ function findNonWallPoint(grid: Grid): Point {
   return node.isWall ? findNonWallPoint(grid) : p;
 }
 
-export function testAStar() {
-  let grid = createGrid(200, 200);
-  console.log('grid', grid);
-  grid = enhanceWithNeighbors(grid);
-  const start = findNonWallPoint(grid);
-  const end = findNonWallPoint(grid);
-  const path = findShortestPath(grid, start, end);
-  console.log('path', grid, path, start, end);
-}
-
-function findShortestPath(
+export function findShortestPath(
   grid: Grid,
   startPoint: Point,
   endPoint: Point

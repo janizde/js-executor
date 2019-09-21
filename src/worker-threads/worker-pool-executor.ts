@@ -550,13 +550,13 @@ interface WorkerPoolContextifiedProxy<C> {
     fnDescriptor: FnDescriptor<I, O, C>,
     data: I,
     transferList?: TransferList
-  ): ExecutorPromise<unknown, I>;
+  ): ExecutorPromise<unknown, O>;
 
   map<I, O>(
     fnDescriptor: FnDescriptor<I, O, C>,
     elements: Array<I>,
     transferList?: TransferList
-  ): ExecutorPromise<I, Array<I>>;
+  ): ExecutorPromise<O, Array<O>>;
 
   provideContext<C2>(
     value: C2,
