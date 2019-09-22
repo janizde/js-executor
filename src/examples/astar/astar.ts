@@ -21,17 +21,19 @@ export function findNonWallPoint(grid: Grid): Point {
   return node.isWall ? findNonWallPoint(grid) : p;
 }
 
-const times: Array<bigint> = [];
+let times: Array<bigint> = [];
 
 process.stdin.on('data', data => {
   if (data.toString() == 's\n') {
-    times.sort();
+    times.sort((a, b) => Number(a - b));
     const avg = times.reduce((a, b) => a + b, 0n) / BigInt(times.length || 1);
     const median = times[Math.floor(times.length / 2)];
     process.stdout.write(
       `Avg comp time: ${avg / 1_000_000n}ms; Median time: ${median /
         1_000_000n}ms\n`
     );
+
+    times = [];
   }
 });
 
