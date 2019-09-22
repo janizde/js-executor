@@ -8,6 +8,7 @@ import { cpus } from 'os';
 if (cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
   const numCPUs = cpus().length;
+  console.log(numCPUs);
 
   // Fork workers.
   for (let i = 0; i < numCPUs; i++) {

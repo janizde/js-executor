@@ -32,7 +32,7 @@ while (set.length < 250) {
 const data = {
   grid: {
     ...grid,
-    nodes: grid.nodes.map(n => ({ x: n.x, y: n.y, isWall: n.isWall }))
+    nodes: grid.nodes.map(n => ({ ...n, neighbors: [] }))
   },
   endpointSets: set
 };
