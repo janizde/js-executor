@@ -8,7 +8,7 @@ import {
 import * as fs from 'fs';
 import * as path from 'path';
 
-const size = 100;
+const size = 400;
 
 const grid = enhanceWithNeighbors(createGrid(size, size));
 

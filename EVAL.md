@@ -902,3 +902,309 @@ Avg comp time: 187ms; Median time: 194ms
 Avg comp time: 191ms; Median time: 195ms
 Avg comp time: 188ms; Median time: 198ms
 ```
+
+# Size 400
+
+## Single - c 1
+
+```
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   1
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO Total time:          96.60049556199999 s
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO Requests per second: 1
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO Mean latency:        965.9 ms
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO   50%      955 ms
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO   90%      1897 ms
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO   95%      2334 ms
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO   99%      3938 ms
+[Sun Sep 22 2019 12:54:24 GMT+0200 (Central European Summer Time)] INFO  100%      3938 ms (longest request)
+Avg comp time: 962ms; Median time: 953ms
+```
+
+## Single - c 4
+
+```
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   4
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO Total time:          89.96508791000001 s
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO Requests per second: 1
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO Mean latency:        3563.9 ms
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO   50%      3282 ms
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO   90%      5150 ms
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO   95%      6282 ms
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO   99%      7219 ms
+[Sun Sep 22 2019 12:56:56 GMT+0200 (Central European Summer Time)] INFO  100%      7219 ms (longest request)
+Avg comp time: 887ms; Median time: 893ms
+```
+
+## Single - c 8
+
+```
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   8
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO Total time:          80.5879977 s
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO Requests per second: 1
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO Mean latency:        6210.2 ms
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO   50%      6380 ms
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO   90%      8410 ms
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO   95%      9162 ms
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO   99%      9637 ms
+[Sun Sep 22 2019 12:59:35 GMT+0200 (Central European Summer Time)] INFO  100%      9637 ms (longest request)
+Avg comp time: 788ms; Median time: 791ms
+```
+
+## Cluster - c 1
+
+```
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   1
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO Total time:          67.093239971 s
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO Requests per second: 1
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO Mean latency:        670.8 ms
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO   50%      775 ms
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO   90%      1198 ms
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO   95%      1245 ms
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO   99%      1445 ms
+[Sun Sep 22 2019 13:01:36 GMT+0200 (Central European Summer Time)] INFO  100%      1445 ms (longest request)
+Avg comp time: 665ms; Median time: 752ms
+```
+
+## Cluster - c 4
+
+```
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   4
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO Total time:          37.228228425000005 s
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO Requests per second: 3
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO Mean latency:        1472.2 ms
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO   50%      1635 ms
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO   90%      2765 ms
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO   95%      2953 ms
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO   99%      3263 ms
+[Sun Sep 22 2019 13:04:10 GMT+0200 (Central European Summer Time)] INFO  100%      3263 ms (longest request)
+Avg comp time: 1417ms; Median time: 1462ms
+```
+
+## Cluster - c 8
+
+```
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   8
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO Total time:          37.40480387 s
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO Requests per second: 3
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO Mean latency:        2954.8 ms
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO   50%      2830 ms
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO   90%      4669 ms
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO   95%      5676 ms
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO   99%      7771 ms
+[Sun Sep 22 2019 13:06:03 GMT+0200 (Central European Summer Time)] INFO  100%      7771 ms (longest request)
+Avg comp time: 1531ms; Median time: 1794ms
+```
+
+## Executor - c 1
+
+```
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   1
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO Total time:          86.302572903 s
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO Requests per second: 1
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO Mean latency:        862.9 ms
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO   50%      944 ms
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO   90%      1522 ms
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO   95%      1897 ms
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO   99%      2501 ms
+[Sun Sep 22 2019 13:08:07 GMT+0200 (Central European Summer Time)] INFO  100%      2501 ms (longest request)
+Avg comp time: 887ms; Median time: 1029ms
+Avg comp time: 808ms; Median time: 813ms
+Avg comp time: 835ms; Median time: 847ms
+Avg comp time: 814ms; Median time: 841ms
+```
+
+## Executor - c 4
+
+```
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   4
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO Total time:          44.670379574 s
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO Requests per second: 2
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO Mean latency:        1757.3 ms
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO   50%      1825 ms
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO   90%      3254 ms
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO   95%      3576 ms
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO   99%      4451 ms
+[Sun Sep 22 2019 13:09:22 GMT+0200 (Central European Summer Time)] INFO  100%      4451 ms (longest request)
+Avg comp time: 1415ms; Median time: 1561ms
+Avg comp time: 1278ms; Median time: 1392ms
+Avg comp time: 1444ms; Median time: 1311ms
+Avg comp time: 1385ms; Median time: 1384ms
+```
+
+## Executor - c 8
+
+```
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   8
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO Total time:          55.088573599 s
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO Requests per second: 2
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO Mean latency:        4211.9 ms
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO   50%      3929 ms
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO   90%      7848 ms
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO   95%      8963 ms
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO   99%      9826 ms
+[Sun Sep 22 2019 13:10:51 GMT+0200 (Central European Summer Time)] INFO  100%      9826 ms (longest request)
+Avg comp time: 1994ms; Median time: 2182ms
+Avg comp time: 1764ms; Median time: 1318ms
+Avg comp time: 1990ms; Median time: 1948ms
+Avg comp time: 2060ms; Median time: 2219ms
+```
+
+## Worker - c 1
+
+```
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   1
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO Total time:          91.58650983599999 s
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO Requests per second: 1
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO Mean latency:        915.8 ms
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO   50%      953 ms
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO   90%      1559 ms
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO   95%      2069 ms
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO   99%      3985 ms
+[Sun Sep 22 2019 13:14:17 GMT+0200 (Central European Summer Time)] INFO  100%      3985 ms (longest request)
+Avg comp time: 973ms; Median time: 1000ms
+Avg comp time: 848ms; Median time: 797ms
+Avg comp time: 883ms; Median time: 950ms
+Avg comp time: 935ms; Median time: 1080ms
+```
+
+## Worker - c 4
+
+```
+[Sun Sep 22 2019 13:15:24 GMT+0200 (Central European Summer Time)] INFO Requests: 0 (0%), requests per second: 0, mean latency: 0 ms
+[Sun Sep 22 2019 13:15:29 GMT+0200 (Central European Summer Time)] INFO Requests: 10 (10%), requests per second: 2, mean latency: 1771 ms
+[Sun Sep 22 2019 13:15:34 GMT+0200 (Central European Summer Time)] INFO Requests: 24 (24%), requests per second: 3, mean latency: 1137.2 ms
+[Sun Sep 22 2019 13:15:39 GMT+0200 (Central European Summer Time)] INFO Requests: 35 (35%), requests per second: 2, mean latency: 1951.2 ms
+[Sun Sep 22 2019 13:15:44 GMT+0200 (Central European Summer Time)] INFO Requests: 48 (48%), requests per second: 3, mean latency: 1412 ms
+[Sun Sep 22 2019 13:15:49 GMT+0200 (Central European Summer Time)] INFO Requests: 56 (56%), requests per second: 2, mean latency: 2106.3 ms
+[Sun Sep 22 2019 13:15:54 GMT+0200 (Central European Summer Time)] INFO Requests: 70 (70%), requests per second: 3, mean latency: 1947.9 ms
+[Sun Sep 22 2019 13:15:59 GMT+0200 (Central European Summer Time)] INFO Requests: 82 (82%), requests per second: 2, mean latency: 1369.6 ms
+[Sun Sep 22 2019 13:16:04 GMT+0200 (Central European Summer Time)] INFO Requests: 92 (92%), requests per second: 2, mean latency: 2179.3 ms
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   4
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO Total time:          43.778692507 s
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO Requests per second: 2
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO Mean latency:        1721.4 ms
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO   50%      1757 ms
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO   90%      3378 ms
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO   95%      3733 ms
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO   99%      4379 ms
+[Sun Sep 22 2019 13:16:08 GMT+0200 (Central European Summer Time)] INFO  100%      4379 ms (longest request)
+Avg comp time: 1422ms; Median time: 1535ms
+Avg comp time: 1250ms; Median time: 1366ms
+Avg comp time: 1435ms; Median time: 1374ms
+Avg comp time: 1359ms; Median time: 1618ms
+```
+
+## Worker - c 8
+
+```
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO Max requests:        100
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   8
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO Completed requests:  100
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO Total time:          52.912959551 s
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO Requests per second: 2
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO Mean latency:        4012.4 ms
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO   50%      3786 ms
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO   90%      7509 ms
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO   95%      9062 ms
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO   99%      11125 ms
+[Sun Sep 22 2019 13:17:33 GMT+0200 (Central European Summer Time)] INFO  100%      11125 ms (longest request)
+Avg comp time: 1955ms; Median time: 2017ms
+Avg comp time: 1645ms; Median time: 1417ms
+Avg comp time: 1950ms; Median time: 2077ms
+Avg comp time: 2010ms; Median time: 2221ms
+```
