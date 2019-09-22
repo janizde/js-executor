@@ -92,7 +92,7 @@ class WorkerPool {
         join(__dirname, '..', '..', 'dist', 'worker-threads', 'bridge.js'),
         {
           stdin: true,
-          stdout: true,
+          stdout: true
         }
       ); // <<< Worker / Worker
       workers.push(worker);
@@ -141,6 +141,7 @@ class WorkerPool {
 
     const worker = this.workers[workerId];
     worker.postMessage(contextCmd, context.transferList);
+    this.contextRegister[workerId].push(context.id);
   }
 
   /**
