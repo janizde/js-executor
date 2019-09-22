@@ -1,10 +1,10 @@
-import { enhanceWithNeighbors } from './../examples/astar/create';
+import { Grid } from './../examples/astar/create';
 import { findShortestPath, Point } from './../examples/astar/astar';
 
 import * as http from 'http';
 
 const sampleData = require('./../../sample-data.json');
-const grid = enhanceWithNeighbors(sampleData.grid);
+const grid = sampleData.grid as Grid;
 const samples = sampleData.endpointSets as Array<{
   start: Point;
   end: Point;

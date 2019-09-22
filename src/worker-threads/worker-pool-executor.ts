@@ -89,7 +89,11 @@ class WorkerPool {
 
     for (let i = 0; i < numWorkers; ++i) {
       const worker = new Worker(
-        join(__dirname, '..', '..', 'dist', 'worker-threads', 'bridge.js')
+        join(__dirname, '..', '..', 'dist', 'worker-threads', 'bridge.js'),
+        {
+          stdin: true,
+          stdout: true,
+        }
       ); // <<< Worker / Worker
       workers.push(worker);
       contextRegister.push([]);

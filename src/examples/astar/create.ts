@@ -1,7 +1,8 @@
 export interface Node {
+  id: number;
   x: number;
   y: number;
-  neighbors?: Array<Node>;
+  neighbors?: Array<number>;
   isWall: boolean;
 }
 
@@ -13,7 +14,7 @@ export interface Grid {
 
 function addIfNoWall(target: Node, source: Node) {
   if (!source.isWall) {
-    target.neighbors.push(source);
+    target.neighbors.push(source.id);
   }
 }
 
@@ -22,7 +23,9 @@ export function createGrid(cols: number, rows: number): Grid {
 
   for (let x = 0; x < cols; ++x) {
     for (let y = 0; y < rows; ++y) {
-      nodes[y * cols + x] = {
+      const idx = y * cols + x;
+      nodes[idx] = {
+        id: idx,
         x,
         y,
         isWall: Math.random() < 0.4,
@@ -45,6 +48,10 @@ export function enhanceWithNeighbors(grid: Grid): Grid {
   for (let x = 0; x < cols; ++x) {
     for (let y = 0; y < rows; ++y) {
       const node = nodes[y * cols + x];
+      
+      if (node.isWall) {
+        continue;
+      }
 
       if (x < cols - 1) {
         addIfNoWall(node, nodes[idx(x + 1, y)]);

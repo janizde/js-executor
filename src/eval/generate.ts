@@ -8,7 +8,9 @@ import {
 import * as fs from 'fs';
 import * as path from 'path';
 
-const grid = enhanceWithNeighbors(createGrid(50, 50));
+const size = 200;
+
+const grid = enhanceWithNeighbors(createGrid(size, size));
 
 const set: Array<{ start: Point; end: Point }> = [];
 while (set.length < 250) {
@@ -18,7 +20,7 @@ while (set.length < 250) {
   const dy = end.y - start.y;
   const mag = Math.sqrt(dx * dx + dy * dy);
 
-  if (mag < 20) {
+  if (mag < size / 2) {
     continue;
   }
 
@@ -26,19 +28,23 @@ while (set.length < 250) {
 
   if (path) {
     set.push({ start, end });
+    process.stdout.write('#');
   }
 }
 
 const data = {
-  grid: {
-    ...grid,
-    nodes: grid.nodes.map(n => ({ ...n, neighbors: [] }))
-  },
+  grid: grid,
   endpointSets: set
 };
 
 const content = JSON.stringify(data, null, 2);
 
-fs.writeFileSync(path.join(__dirname, 'sample-data.json'), content, {
-  encoding: 'utf8'
-});
+fs.writeFileSync(
+  path.join(__dirname, '..', '..', 'sample-data.json'),
+  content,
+  {
+    encoding: 'utf8'
+  }
+);
+
+process.stdout.write('\n');

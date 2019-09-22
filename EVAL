@@ -1,0 +1,27 @@
+# Size 200
+
+## Single – c 1
+
+```
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO Target URL:          http://localhost:8000
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO Max requests:        1000
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO Concurrency level:   1
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO Agent:               none
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO Completed requests:  1000
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO Total errors:        0
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO Total time:          110.222390102 s
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO Requests per second: 9
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO Mean latency:        110.2 ms
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO 
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO Percentage of the requests served within a certain time
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO   50%      113 ms
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO   90%      193 ms
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO   95%      217 ms
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO   99%      265 ms
+[Sun Sep 22 2019 10:00:39 GMT+0200 (Central European Summer Time)] INFO  100%      350 ms (longest request)
+```
+
+## Single – c 4
+

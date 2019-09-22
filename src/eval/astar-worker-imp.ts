@@ -1,0 +1,64 @@
+import { Grid } from './../examples/astar/create';
+import { Point } from './../examples/astar/astar';
+import { Worker } from 'worker_threads';
+
+import * as http from 'http';
+import * as path from 'path';
+
+const sampleData = require('./../../sample-data.json');
+const grid = sampleData.grid as Grid;
+const samples = sampleData.endpointSets as Array<{
+  start: Point;
+  end: Point;
+}>;
+
+const workers: Array<Worker> = [];
+for (let i = 0; i < 4; ++i) {
+  const worker = new Worker(
+    path.join(__dirname, 'astar-worker-imp-worker.js'),
+    {
+      stdin: true,
+      stdout: true
+    }
+  );
+  worker.postMessage({ cmd: 'grid', grid });
+  workers.push(worker);
+}
+
+workers.forEach(worker => {
+  process.stdin.pipe(worker.stdin);
+  worker.stdout.pipe(process.stdout);
+});
+
+let i = 0;
+
+// Workers can share any TCP connection
+// In this case it is an HTTP server
+http
+  .createServer((req, res) => {
+    const id = i;
+    const sample = samples[id % samples.length];
+    const worker = workers[id % 4];
+    ++i;
+
+    const handler = (message: any) => {
+      if (message.cmd === 'path' && message.id === id) {
+        worker.off('message', handler);
+        const resData = { path: message.path };
+        res.writeHead(200, {
+          'Content-Type': 'application/json'
+        });
+
+        res.end(JSON.stringify(resData, null, 2));
+      }
+    };
+
+    worker.on('message', handler);
+    worker.postMessage({
+      cmd: 'path',
+      id,
+      start: sample.start,
+      end: sample.end
+    });
+  })
+  .listen(8000);

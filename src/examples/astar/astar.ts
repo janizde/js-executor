@@ -1,4 +1,4 @@
-import { Grid, Node, createGrid, enhanceWithNeighbors } from './create';
+import { Grid, Node } from './create';
 
 interface NodeState {
   f: number;
@@ -21,11 +21,26 @@ export function findNonWallPoint(grid: Grid): Point {
   return node.isWall ? findNonWallPoint(grid) : p;
 }
 
+const times: Array<bigint> = [];
+
+process.stdin.on('data', data => {
+  if (data.toString() == 's\n') {
+    times.sort();
+    const avg = times.reduce((a, b) => a + b, 0n) / BigInt(times.length || 1);
+    const median = times[Math.floor(times.length / 2)];
+    process.stdout.write(
+      `Avg comp time: ${avg / 1_000_000n}ms; Median time: ${median /
+        1_000_000n}ms\n`
+    );
+  }
+});
+
 export function findShortestPath(
   grid: Grid,
   startPoint: Point,
   endPoint: Point
 ): Array<Node> | null {
+  const before = process.hrtime.bigint();
   const openSet = new Set<Node>();
   const closedSet = new Set<Node>();
   const globalPath: Array<Node> = [];
@@ -59,6 +74,7 @@ export function findShortestPath(
         tmp = parent.get(tmp);
       }
 
+      times.push(process.hrtime.bigint() - before);
       return path;
     }
 
@@ -66,7 +82,7 @@ export function findShortestPath(
     closedSet.add(current);
     globalPath.push(current);
 
-    const neighbors = current.neighbors;
+    const neighbors = current.neighbors.map(id => grid.nodes[id]);
     for (let i = 0; i < neighbors.length; ++i) {
       const n = neighbors[i];
 
