@@ -29,8 +29,8 @@ process.stdin.on('data', data => {
     const avg = times.reduce((a, b) => a + b, 0n) / BigInt(times.length || 1);
     const median = times[Math.floor(times.length / 2)];
     process.stdout.write(
-      `Avg comp time: ${avg / 1_000_000n}ms; Median time: ${median /
-        1_000_000n}ms\n`
+      `Avg comp time: ${avg / 1_000n}micro_s; Median time: ${median /
+        1_000n}micro_s\n`
     );
 
     times = [];
