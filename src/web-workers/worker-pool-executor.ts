@@ -134,6 +134,7 @@ class WorkerPool {
 
     const worker = this.workers[workerId];
     worker.postMessage(contextCmd, context.transferList as Array<Transferable>);
+    this.contextRegister[workerId].push(context.id);
   }
 
   /**

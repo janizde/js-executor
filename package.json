@@ -37,7 +37,5 @@
     "webpack-cli": "^3.3.7",
     "webpack-dev-server": "^3.8.0"
   },
-  "dependencies": {
-    "pngjs": "^3.4.0"
-  }
+  "dependencies": {}
 }

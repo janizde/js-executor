@@ -4,9 +4,8 @@ const HTMLWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   mode: 'development',
   entry: {
-    main: './src/webpack-entry.ts',
-    workerBridge: './src/web-workers/bridge.ts',
-    vanillaWorker: './src/examples/vanilla-worker.ts'
+    main: './src/mandelbrot/entry.ts',
+    workerBridge: './src/web-workers/bridge.ts'
   },
   devServer: {
     contentBase: path.resolve(__dirname, 'public'),

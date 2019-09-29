@@ -2,6 +2,8 @@ import { Context } from './../common/typings';
 import ExecutorPromise, { ABORTED } from './../common/executor-promise';
 import ContextifiedProxy from './../common/contextified-proxy';
 
+// Typings for `requestIdleCallback` are not included in TypeScript
+// as it is considered experimental.
 declare global {
   // https://github.com/Microsoft/TypeScript/issues/21309#issuecomment-376338415
   type RequestIdleCallbackHandle = any;
@@ -374,6 +376,9 @@ class IdlePeriodQueue {
 
       if (
         !result ||
+        // Arrays also have a [Symbol.iterator] but should be treated
+        // as atomar result values
+        Array.isArray(result) ||
         (!(result as IterableIterator<O>)[Symbol.iterator] &&
           !(result as AsyncIterableIterator<O>)[Symbol.asyncIterator])
       ) {
@@ -385,7 +390,7 @@ class IdlePeriodQueue {
 
         return null;
       } else {
-        // When the result is an iterator,
+        // When the result is an iterator
         return {
           element,
           iterator: result as IterableIterator<O> | AsyncIterableIterator<O>,
