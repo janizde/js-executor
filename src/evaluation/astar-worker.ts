@@ -17,7 +17,7 @@ const samples = sampleData.endpointSets as Array<{
 
 const workers: Array<Worker> = [];
 for (let i = 0; i < 4; ++i) {
-  const worker = new Worker(path.join(__dirname, 'astar-worker-imp-worker.js'));
+  const worker = new Worker(path.join(__dirname, 'astar-worker-worker.js'));
   worker.postMessage({ cmd: 'grid', grid });
   workers.push(worker);
 }

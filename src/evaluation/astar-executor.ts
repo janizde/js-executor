@@ -20,7 +20,7 @@ const samples = sampleData.endpointSets as Array<{
 
 const executor = new WorkerPoolExecutor(4);
 const withGrid = executor
-  .importFunction(path.join(__dirname, 'astar-worker-module'), [
+  .importFunction(path.join(__dirname, 'astar-executor-module'), [
     'aStarFindPath'
   ])
   .provideContext(grid);
