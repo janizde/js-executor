@@ -4,8 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/executor.js",
-    "start:watch": "nodemon dist/executor.js",
     "build": "npm run clean && tsc",
     "build:watch": "npm run clean && tsc --watch",
     "prettify": "prettier --write src/**/*.ts",
